@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace ru.mofrison.unity3d.UnityExtended
+namespace UnityExtended
 {
     /// <summary>
     /// Class for extending the capabilities of the Unity3d editor
@@ -37,38 +37,7 @@ namespace ru.mofrison.unity3d.UnityExtended
             /// </summary>
             public void Draw()
             {
-                if (serializedProperty.propertyType == SerializedPropertyType.ObjectReference)
-                {
-                    // We draw a spoiler
-                    foldout = EditorGUILayout.Foldout(foldout, new GUIContent());
-
-                    EditorGUI.BeginChangeCheck();
-                    // Draw the field of the object
-                    EditorGUI.ObjectField(GUILayoutUtility.GetLastRect(), serializedProperty, label);
-
-                    // If there are changes
-                    if (EditorGUI.EndChangeCheck() || (serializedProperty.objectReferenceValue ^ editor))
-                    {
-                        // Update the object editor
-                        UpdateEditor();
-                    }
-
-                    if (foldout)
-                    {
-                        GUILayout.BeginVertical(EditorStyles.helpBox);
-                        // Display the properties of object or display an error if they are not there
-                        if (editor != null)
-                        {
-                            editor.OnInspectorGUI();
-                        }
-                        else
-                        {
-                            ExtendedEditor.DisplayMessage($"The {serializedProperty.displayName} field must not be empty!", MessageType.Error);
-                        }
-                        GUILayout.EndVertical();
-                    }
-                }
-                else
+                if (serializedProperty.propertyType != SerializedPropertyType.ObjectReference)
                 {
                     // If field is not reference, show error message.            
                     var style = new GUIStyle(EditorStyles.objectField);
@@ -76,13 +45,42 @@ namespace ru.mofrison.unity3d.UnityExtended
 
                     // Display label with error message
                     EditorGUILayout.LabelField(label, new GUIContent($"{serializedProperty.propertyType} is not a reference type"), style);
+                    return;
+                }
+                // We draw a spoiler
+                foldout = EditorGUILayout.Foldout(foldout, new GUIContent());
+
+                EditorGUI.BeginChangeCheck();
+                // Draw the field of the object
+                EditorGUI.ObjectField(GUILayoutUtility.GetLastRect(), serializedProperty, label);
+
+                // If there are changes
+                if (EditorGUI.EndChangeCheck() || (serializedProperty.objectReferenceValue ^ editor))
+                {
+                    // Update the object editor
+                    UpdateEditor();
+                }
+
+                if (foldout)
+                {
+                    GUILayout.BeginVertical(EditorStyles.helpBox);
+                    // Display the properties of object or display an error if they are not there
+                    if (editor != null)
+                    {
+                        editor.OnInspectorGUI();
+                    }
+                    else
+                    {
+                        ExtendedEditor.DisplayMessage($"The {serializedProperty.displayName} field must not be empty!", MessageType.Error);
+                    }
+                    GUILayout.EndVertical();
                 }
             }
 
             /// <summary>
             /// Update the object editor
             /// </summary>
-            public void UpdateEditor()
+            private void UpdateEditor()
             {
                 if (serializedProperty.propertyType == SerializedPropertyType.ObjectReference)
                 {
