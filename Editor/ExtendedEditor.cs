@@ -47,6 +47,7 @@ namespace UnityExtended
                     EditorGUILayout.LabelField(label, new GUIContent($"{serializedProperty.propertyType} is not a reference type"), style);
                     return;
                 }
+
                 // We draw a spoiler
                 foldout = EditorGUILayout.Foldout(foldout, new GUIContent());
 
@@ -93,7 +94,7 @@ namespace UnityExtended
         private List<ObjectPropertyView> properties = new List<ObjectPropertyView>();
 
         /// <summary>
-        /// Method for drawing in the Inspector window
+        /// Make a custom inspector
         /// </summary>
         public override void OnInspectorGUI()
         {
@@ -111,21 +112,23 @@ namespace UnityExtended
         /// <summary>
         /// Method for adding displayable serialized object properties
         /// </summary>
-        /// <param name="serializedProperty">Свойства для отображения</param>
+        /// <param name="serializedProperty">Properties to display</param>
         /// <param name="label">Label of the field</param>
-        protected void AddPropertyView(SerializedProperty serializedProperty, GUIContent label = null) {
+        protected void AddPropertyView(SerializedProperty serializedProperty, GUIContent label = null)
+        {
+            if (target.GetType().ToString().Equals(serializedProperty.type.TrimStart("PPtr <$".ToCharArray()).TrimEnd('>')))
+            {
+                throw new System.ArgumentException("The type of the field must be different from the type of the parent object, otherwise recursion occurs.");
+            }
             properties.Add(new ObjectPropertyView(serializedProperty, label));
         }
 
         /// <summary>
         /// Method for adding displayable serialized object properties
         /// </summary>
-        /// <param name="serializedProperty">Свойства для отображения</param>
+        /// <param name="serializedProperty">Properties to display</param>
         /// <param name="label">Label of the field</param>
-        protected void AddPropertyView(SerializedProperty serializedProperty, string label)
-        {
-            properties.Add(new ObjectPropertyView(serializedProperty, new GUIContent(label)));
-        }
+        protected void AddPropertyView(SerializedProperty serializedProperty, string label) => AddPropertyView(serializedProperty, new GUIContent(label));
 
         /// <summary>
         /// Display the properties of objects added to the list
