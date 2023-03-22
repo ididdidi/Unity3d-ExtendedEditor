@@ -26,7 +26,7 @@ namespace UnityExtended
             /// <param name="label">Label of the field</param>
             public ObjectPropertyView(SerializedProperty property, GUIContent label = null)
             {
-                this.label = (label != null) ? label : new GUIContent(property.name);
+                this.label = (label != null) ? label : new GUIContent(property.name.Substring(0, 1).ToUpper() + property.name.Substring(1));
                 this.serializedProperty = property;
                 this.foldout = false;
                 UpdateEditor();
