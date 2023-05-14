@@ -4,31 +4,33 @@ using UnityEngine;
 /// <summary>
 /// Class that complements the capabilities of the editor GUI
 /// </summary>
-public class ExtendedEditorGUI
+public partial class ExtendedEditorGUI
 {
     /// <summary>
-    /// Static method to display message in Unity3d inspector
+    /// Display a field for adding a reference to an object
     /// </summary>
-    /// <param name="message">Message text as <see cref="string"/></param>
-    /// <param name="messageType">Message type determines the icon before the message(None, Information, Warning, Error)</param>
-    public static void DisplayMessage(string message, MessageType messageType = MessageType.None)
-    {
-        // Create content from the icon and text of the message
-        GUIContent label = new GUIContent(message);
-        switch (messageType)
+    /// <param name="position"><see cref="Rect"/> fields to activate validation</param>
+    /// <param name="property">Serializedproperty the object</param>
+    /// <param name="requiredType">Required <see cref="System.Type"/> of reference being checked</param>
+    /// <param name="label">Displaу field label</param>
+    private void ObjectField(Rect position, SerializedProperty property, System.Type requiredType, GUIContent label)
+    {   
+        // If the reference is not null and points to an object that does match the type
+        ChecValues(property.objectReferenceValue, requiredType);
+
+        // Make sure the objects being moved are of the right type
+        ChecDragAndDrops(position, requiredType);
+        
+        // Start change checks
+        EditorGUI.BeginChangeCheck();
+        // Display a ObjectField
+        EditorGUI.ObjectField(position, property, label);
+        // If changes were made to the contents of the field and a GameObject was added to the field
+        if (EditorGUI.EndChangeCheck() && property.objectReferenceValue is GameObject @object)
         {
-            case MessageType.Info: { label.image = EditorGUIUtility.Load("icons/console.infoicon.png") as Texture2D; break; }
-            case MessageType.Warning: { label.image = EditorGUIUtility.Load("icons/console.warnicon.png") as Texture2D; break; }
-            case MessageType.Error: { label.image = EditorGUIUtility.Load("icons/console.erroricon.png") as Texture2D; break; }
+            // Get component of the required type on the object and save a reference to it in a property
+            property.objectReferenceValue = @object.GetComponent(requiredType);
         }
-
-        // Define the message display style
-        var style = new GUIStyle();
-        style.wordWrap = true;
-        style.normal.textColor = GUI.skin.label.normal.textColor;
-
-        // Display message
-        EditorGUILayout.LabelField(label, style);
     }
 
     /// <summary>
@@ -39,6 +41,9 @@ public class ExtendedEditorGUI
     /// <param name="label">Displaу field label</param>
     public Object ObjectField(Rect position, Object field, System.Type requiredType, string label = null, System.Predicate<Object> predicate = null)
     {
+        // If the reference is not null and points to an object that does match the type
+        ChecValues(field, requiredType);
+
         // Make sure the objects being moved are of the right type
         ChecDragAndDrops(position, requiredType);
 
@@ -107,4 +112,12 @@ public class ExtendedEditorGUI
         // Check the reference itself for compliance with the required type
         return requiredType.IsAssignableFrom(@object.GetType());
     }
+
+    /// <summary>
+    /// Checks a previously added object for compliance
+    /// </summary>
+    /// <param name="object">Checked object</param>
+    /// <param name="requiredType">Required <see cref="System.Type"/> of reference being checked</param>
+    /// <returns></returns>
+    private Object ChecValues(Object @object, System.Type requiredType) => @object != null && IsValidObject(@object, requiredType) ? @object : null;
 }

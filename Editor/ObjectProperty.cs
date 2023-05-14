@@ -8,7 +8,7 @@ namespace UnityExtended
         /// <summary>
         /// Class for displaying properties of serialized object fields
         /// </summary>
-        private class ObjectPropertyView
+        private class ObjectProperty
         {
             private GUIContent label;
             private SerializedProperty serializedProperty;
@@ -20,7 +20,7 @@ namespace UnityExtended
             /// </summary>
             /// <param name="property">Property of serialized object</param>
             /// <param name="label">Label of the field</param>
-            public ObjectPropertyView(SerializedProperty property, GUIContent label = null)
+            public ObjectProperty(SerializedProperty property, GUIContent label = null)
             {
                 this.label = (label != null) ? label : new GUIContent(property.name);
                 this.serializedProperty = property;
@@ -81,7 +81,7 @@ namespace UnityExtended
             {
                 if (serializedProperty.propertyType == SerializedPropertyType.ObjectReference)
                 {
-                    editor = Editor.CreateEditor(serializedProperty.objectReferenceValue);
+                    editor = CreateEditor(serializedProperty.objectReferenceValue);
                 }
             }
         }

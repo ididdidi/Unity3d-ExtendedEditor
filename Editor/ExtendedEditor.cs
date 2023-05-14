@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using static UnityExtended.ExtendedEditorGUI;
 
 namespace UnityExtended
 {
@@ -10,7 +11,7 @@ namespace UnityExtended
     public abstract partial class ExtendedEditor : Editor
     {
         // List of prepared object property editors
-        private List<ObjectPropertyView> properties = new List<ObjectPropertyView>();
+        private List<ObjectProperty> properties = new List<ObjectProperty>();
 
         /// <summary>
         /// Make a custom inspector
@@ -39,7 +40,7 @@ namespace UnityExtended
             {
                 throw new System.ArgumentException("The type of the field must be different from the type of the parent object, otherwise recursion occurs.");
             }
-            properties.Add(new ObjectPropertyView(serializedProperty, label));
+            properties.Add(new ObjectProperty(serializedProperty, label));
         }
 
         /// <summary>
