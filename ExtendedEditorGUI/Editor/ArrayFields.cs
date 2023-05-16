@@ -1,69 +1,71 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-/// <summary>
-/// Class that complements the capabilities of the editor GUI
-/// </summary>
-public partial class ExtendedEditorGUI
+namespace UnityExtended
 {
     /// <summary>
-    /// Displays an array of objects as fields in the inspector
+    /// Class that complements the capabilities of the editor GUI
     /// </summary>
-    /// <typeparam name="T">Type of elements in array</typeparam>
-    /// <param name="array">Source array of elements</param>
-    /// <param name="label">The label displayed above the array</param>
-    /// <param name="open">Reference to a variable to control the collapse of an array</param>
-    /// <param name="resizable">Is it possible to resize an array</param>
-    /// <returns>Modified array</returns>
-    public static T[] ArrayFields<T>(T[] array, string label, ref bool open, bool resizable = true) where T : Object
+    public static partial class ExtendedEditorGUI
     {
-        open = EditorGUILayout.Foldout(open, label);
-        int newSize = array.Length;
-
-        if (open)
+        /// <summary>
+        /// Displays an array of objects as fields in the inspector
+        /// </summary>
+        /// <typeparam name="T">Type of elements in array</typeparam>
+        /// <param name="array">Source array of elements</param>
+        /// <param name="label">The label displayed above the array</param>
+        /// <param name="open">Reference to a variable to control the collapse of an array</param>
+        /// <param name="resizable">Is it possible to resize an array</param>
+        /// <returns>Modified array</returns>
+        public static T[] ArrayFields<T>(T[] array, string label, ref bool open, bool resizable = true) where T : Object
         {
-            if (resizable)
-            {
-                newSize = EditorGUILayout.IntField("Size", newSize);
-                newSize = newSize < 0 ? 0 : newSize;
-            }
+            open = EditorGUILayout.Foldout(open, label);
+            int newSize = array.Length;
 
-            if (newSize != array.Length)
+            if (open)
             {
-                array = ResizeArray(array, newSize);
-            }
+                if (resizable)
+                {
+                    newSize = EditorGUILayout.IntField("Size", newSize);
+                    newSize = newSize < 0 ? 0 : newSize;
+                }
 
-            EditorGUI.indentLevel++;
-            for (var i = 0; i < newSize; i++)
-            {
-                array[i] = EditorGUILayout.ObjectField(typeof(T).Name, array[i], typeof(T), true) as T;
+                if (newSize != array.Length)
+                {
+                    array = ResizeArray(array, newSize);
+                }
+
+                EditorGUI.indentLevel++;
+                for (var i = 0; i < newSize; i++)
+                {
+                    array[i] = EditorGUILayout.ObjectField(typeof(T).Name, array[i], typeof(T), true) as T;
+                }
+                EditorGUI.indentLevel--;
             }
-            EditorGUI.indentLevel--;
+            return array;
         }
-        return array;
-    }
 
-    /// <summary>
-    /// Method for resizing an array
-    /// </summary>
-    /// <typeparam name="T">Type of elements in array</typeparam>
-    /// <param name="array">Source array of elements</param>
-    /// <param name="size">New array size</param>
-    /// <returns>An array of the specified size</returns>
-    private static T[] ResizeArray<T>(T[] array, int size)
-    {
-        if (size < 0) { return array; }
-
-        T[] newArray = new T[size];
-
-        for (var i = 0; i < size; i++)
+        /// <summary>
+        /// Method for resizing an array
+        /// </summary>
+        /// <typeparam name="T">Type of elements in array</typeparam>
+        /// <param name="array">Source array of elements</param>
+        /// <param name="size">New array size</param>
+        /// <returns>An array of the specified size</returns>
+        private static T[] ResizeArray<T>(T[] array, int size)
         {
-            if (i < array.Length)
+            if (size < 0) { return array; }
+
+            T[] newArray = new T[size];
+
+            for (var i = 0; i < size; i++)
             {
-                newArray[i] = array[i];
+                if (i < array.Length)
+                {
+                    newArray[i] = array[i];
+                }
             }
+            return newArray;
         }
-        return newArray;
     }
 }
-

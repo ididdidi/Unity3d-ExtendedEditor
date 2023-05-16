@@ -6,7 +6,7 @@ namespace UnityExtended
     /// <summary>
     /// Class that complements the capabilities of the editor GUI
     /// </summary>
-    public partial class ExtendedEditorGUI
+    public static partial class ExtendedEditorGUI
     {
         /// <summary>
         /// Static method to display message in Unity3d inspector
