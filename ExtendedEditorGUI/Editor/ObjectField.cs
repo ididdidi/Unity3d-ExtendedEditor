@@ -54,7 +54,7 @@ namespace UnityExtended
         public static Object ObjectField(Rect position, Object field, System.Type requiredType, GUIContent label = null, System.Predicate<Object> predicate = null)
         {
             // If the reference is not null and points to an object that does match the type
-            ChecValues(field, requiredType);
+            var curent = ChecValues(field, requiredType);
 
             // Make sure the objects being moved are of the right type
             ChecDragAndDrops(position, requiredType);
@@ -66,20 +66,22 @@ namespace UnityExtended
             else { field = EditorGUI.ObjectField(position, field, typeof(object), true); }
 
             // If changes were made to the contents of the field and a GameObject was added to the field
-            if (EditorGUI.EndChangeCheck() && field is GameObject gameObject)
+            if (EditorGUI.EndChangeCheck())
             {
-                // Get component of the required type on the object and save a reference to it in a property
-                foreach (var component in gameObject.GetComponents(requiredType))
+                if(field is GameObject gameObject)
                 {
-                    if (predicate == null || predicate.Invoke(component)) { return component; }
+                    // Get component of the required type on the object and save a reference to it in a property
+                    foreach (var component in gameObject.GetComponents(requiredType))
+                    {
+                        if (predicate == null || predicate.Invoke(component)) { return component; }
+                    }
+                }
+                else
+                {
+                    if (predicate != null && predicate.Invoke(field)) return field;
                 }
             }
-            else
-            {
-                if (predicate != null && predicate.Invoke(field)) return field;
-            }
-
-            return null;
+            return curent;
         }
 
         /// <summary>
