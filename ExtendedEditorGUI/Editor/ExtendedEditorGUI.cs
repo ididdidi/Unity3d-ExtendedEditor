@@ -8,6 +8,34 @@ namespace UnityExtended
     /// </summary>
     public static partial class ExtendedEditorGUI
     {
+
+
+        /// <summary>
+        /// Provides a new rect on top of the existing one.
+        /// </summary>
+		/// <param name="rect">Base <see cref="Rect"/></param>
+        /// <param name="size">Dimensions of the new rectangle</param>
+        /// <param name="dX">X offset</param>
+        /// <param name="dY">Y offset</param>
+        /// <returns></returns>
+        public static Rect GetNewRect(Rect rect, Vector2 size, Vector2 padding, float dX = 0f, float dY = 0f)
+        {
+            return new Rect(new Vector2(rect.x + dX + padding.x, rect.y + dY + padding.y), new Vector2(size.x - padding.x * 2f, size.y - padding.y * 2f));
+        }
+
+        /// <summary>
+        /// Simple button with a cross
+        /// </summary>
+        /// <param name="rect"><see cref="Rect"/></param>
+        /// <param name="tooltip">Tooltip on hover</param>
+        /// <returns></returns>
+        public static bool CancelButton(Rect rect, string tooltip = null)
+        {
+            GUIContent iconButton = EditorGUIUtility.TrIconContent("Toolbar Minus", tooltip);
+            if (GUI.Button(rect, iconButton, "SearchCancelButton")) { return true; }
+            return false;
+        }
+
         /// <summary>
         /// Static method to display message in Unity3d inspector
         /// </summary>
