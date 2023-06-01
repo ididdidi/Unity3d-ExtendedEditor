@@ -20,6 +20,7 @@ namespace UnityExtended
         public static T[] ArrayFields<T>(T[] array, string label, ref bool open, bool resizable = true) where T : Object
         {
             open = EditorGUILayout.Foldout(open, label);
+            if(array == null) { array = new T[0]; }
             int newSize = array.Length;
 
             if (open)
