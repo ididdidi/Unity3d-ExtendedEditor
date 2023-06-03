@@ -16,8 +16,9 @@ namespace UnityExtended
         /// <param name="label">The label displayed above the array</param>
         /// <param name="open">Reference to a variable to control the collapse of an array</param>
         /// <param name="resizable">Is it possible to resize an array</param>
+        /// <param name="requiredType">The type of the element to be returned</param>
         /// <returns>Modified array</returns>
-        public static T[] ArrayFields<T>(T[] array, string label, ref bool open, bool resizable = true) where T : Object
+        public static T[] ArrayFields<T>(T[] array, string label, ref bool open, bool resizable = true, System.Type requiredType = null) where T : Object
         {
             open = EditorGUILayout.Foldout(open, label);
             if(array == null) { array = new T[0]; }
@@ -36,10 +37,12 @@ namespace UnityExtended
                     array = ResizeArray(array, newSize);
                 }
 
+                if (requiredType == null) { requiredType = typeof(T); }
+
                 EditorGUI.indentLevel++;
                 for (var i = 0; i < newSize; i++)
                 {
-                    array[i] = EditorGUILayout.ObjectField(typeof(T).Name, array[i], typeof(T), true) as T;
+                    array[i] = EditorGUILayout.ObjectField(requiredType.Name, array[i], requiredType, true) as T;
                 }
                 EditorGUI.indentLevel--;
             }
