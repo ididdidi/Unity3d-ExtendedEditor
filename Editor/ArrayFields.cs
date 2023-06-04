@@ -20,8 +20,12 @@ namespace UnityExtended
         /// <returns>Modified array</returns>
         public static T[] ArrayFields<T>(T[] array, string label, ref bool open, bool resizable = true, System.Type requiredType = null) where T : Object
         {
+            var changed = GUI.changed;
+            GUI.changed = false;
             open = EditorGUILayout.Foldout(open, label);
-            if(array == null) { array = new T[0]; }
+            GUI.changed = changed;
+
+            if (array == null) { array = new T[0]; }
             int newSize = array.Length;
 
             if (open)
