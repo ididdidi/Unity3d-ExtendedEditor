@@ -18,7 +18,7 @@ namespace UnityExtended
         /// <param name="resizable">Is it possible to resize an array</param>
         /// <param name="requiredType">The type of the element to be returned</param>
         /// <returns>Modified array</returns>
-        public static T[] ArrayFields<T>(T[] array, string label, ref bool open, bool resizable = true, System.Type requiredType = null) where T : Object
+        public static T[] ArrayFields<T>(T[] array, string label, ref bool open, bool resizable = true, params System.Type[] requiredTypes) where T : Object
         {
             var changed = GUI.changed;
             GUI.changed = false;
@@ -41,12 +41,27 @@ namespace UnityExtended
                     array = ResizeArray(array, newSize);
                 }
 
-                if (requiredType == null) { requiredType = typeof(T); }
-
                 EditorGUI.indentLevel++;
                 for (var i = 0; i < newSize; i++)
                 {
-                    array[i] = EditorGUILayout.ObjectField(requiredType.Name, array[i], requiredType, true) as T;
+                    EditorGUI.BeginChangeCheck();
+                    var @object = EditorGUILayout.ObjectField(typeof(T).Name, array[i], typeof(T), true) as T;
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        if (!@object) { array[i] = null; continue; }
+                        foreach (var type in requiredTypes)
+                        {
+                            if (@object is Transform transform)
+                            {
+                                var cmp = transform.GetComponent(type);
+                                if (cmp) { array[i] = cmp as T; continue; }
+                            }
+                            else
+                            {
+                                if (type.IsAssignableFrom(@object?.GetType())) { array[i] = @object; continue; }
+                            }
+                        }
+                    }
                 }
                 EditorGUI.indentLevel--;
             }

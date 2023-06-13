@@ -92,56 +92,5 @@ namespace UnityExtended
         /// <param name="label">Displaу field label</param>
         public static void ObjectField(Rect position, Object field, System.Type requiredType, string label)
             => ObjectField(position, field, requiredType, new GUIContent(label));
-
-        /// <summary>
-        /// Checks the validity of the dragged objects
-        /// </summary>
-        /// <param name="position"><see cref="Rect"/> fields to activate validation</param>
-        /// <param name="requiredType">Required <see cref="System.Type"/> of reference being checked</param>
-        private static void ChecDragAndDrops(Rect position, System.Type requiredType)
-        {
-            // If the cursor is in the area of the rendered field
-            if (position.Contains(Event.current.mousePosition))
-            {
-                // Iterate over all draggable references
-                foreach (var @object in DragAndDrop.objectReferences)
-                {
-                    // If we do not find the required type
-                    if (!IsValidObject(@object, requiredType))
-                    {
-                        // Disable drag and drop
-                        DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
-                        break;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Checks if an reference matches the required type
-        /// </summary>
-        /// <param name="object">Checked reference</param>
-        /// <param name="requiredType">Required <see cref="System.Type"/> of reference being checked</param>
-        /// <returns></returns>
-        private static bool IsValidObject(Object @object, System.Type requiredType)
-        {
-            // If the object is a GameObject
-            if (@object is GameObject go)
-            {
-                // Check if it has a component of the required type and return result
-                return go.GetComponent(requiredType) != null;
-            }
-
-            // Check the reference itself for compliance with the required type
-            return requiredType.IsAssignableFrom(@object.GetType());
-        }
-
-        /// <summary>
-        /// Checks a previously added object for compliance
-        /// </summary>
-        /// <param name="object">Checked object</param>
-        /// <param name="requiredType">Required <see cref="System.Type"/> of reference being checked</param>
-        /// <returns></returns>
-        private static Object ChecValues(Object @object, System.Type requiredType) => @object != null && IsValidObject(@object, requiredType) ? @object : null;
     }
 }
