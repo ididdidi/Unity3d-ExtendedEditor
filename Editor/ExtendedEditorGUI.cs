@@ -34,6 +34,22 @@ namespace UnityExtended
             return false;
         }
 
+        public static string SearchField(Rect position, string text)
+        {
+            Rect textRect = position;
+            textRect.width -= 15;
+            text = GUI.TextField(textRect, text, EditorStyles.toolbarSearchField);
+            Rect buttonRect = position;
+            buttonRect.x += position.width - 15;
+            buttonRect.width = 15;
+            if (!string.IsNullOrEmpty(text) && CancelButton(buttonRect))
+            {
+                text = "";
+                GUIUtility.keyboardControl = 0;
+            }
+            return text;
+        }
+
         /// <summary>
         /// Static method to display message in Unity3d inspector
         /// </summary>
