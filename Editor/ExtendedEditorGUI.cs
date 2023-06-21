@@ -36,12 +36,13 @@ namespace UnityExtended
 
         public static string SearchField(Rect position, string text)
         {
+            var buttonSize = EditorGUIUtility.singleLineHeight;
             Rect textRect = position;
-            textRect.width -= 15;
+            textRect.width -= buttonSize / 2;
             text = GUI.TextField(textRect, text, EditorStyles.toolbarSearchField);
             Rect buttonRect = position;
-            buttonRect.x += position.width - 15;
-            buttonRect.width = 15;
+            buttonRect.x += position.width - buttonSize / 2;
+            buttonRect.width = buttonSize;
             if (!string.IsNullOrEmpty(text) && CancelButton(buttonRect))
             {
                 text = "";
