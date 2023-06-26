@@ -22,6 +22,23 @@ namespace UnityExtended
         }
 
         /// <summary>
+        /// Drawing the button in the center of the layout
+        /// </summary>
+        /// <param name="label">Button label</param>
+        /// <param name="width">Button width</param>
+        /// <param name="height">Button height</param>
+        /// <returns>Was the button pressed</returns>
+        public static bool CenterButton(string label, float width = 240f, float height = 24f)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            var result = GUILayout.Button(label, GUILayout.Width(width), GUILayout.Height(height));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            return result;
+        }
+
+        /// <summary>
         /// Simple button with a cross
         /// </summary>
         /// <param name="rect"><see cref="Rect"/></param>
@@ -34,21 +51,27 @@ namespace UnityExtended
             return false;
         }
 
-        public static string SearchField(Rect position, string text)
+        /// <summary>
+        /// Displays the search bar
+        /// </summary>
+        /// <param name="position">Field position</param>
+        /// <param name="keyword">Search keyword</param>
+        /// <returns>New search keyword</returns>
+        public static string SearchField(Rect position, string keyword)
         {
             var buttonSize = EditorGUIUtility.singleLineHeight;
             Rect textRect = position;
             textRect.width -= buttonSize / 2;
-            text = GUI.TextField(textRect, text, EditorStyles.toolbarSearchField);
+            keyword = GUI.TextField(textRect, keyword, EditorStyles.toolbarSearchField);
             Rect buttonRect = position;
             buttonRect.x += position.width - buttonSize / 2;
             buttonRect.width = buttonSize;
-            if (!string.IsNullOrEmpty(text) && CancelButton(buttonRect))
+            if (!string.IsNullOrEmpty(keyword) && CancelButton(buttonRect))
             {
-                text = "";
+                keyword = "";
                 GUIUtility.keyboardControl = 0;
             }
-            return text;
+            return keyword;
         }
 
         /// <summary>
