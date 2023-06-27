@@ -242,8 +242,9 @@ namespace UnityExtended
             // Search
             EditorGUI.FocusTextInControl("ComponentSearch");
 
-            Rect searchRect = GUILayoutUtility.GetRect(10, 20);
+            Rect searchRect = new Rect(0, 0, context.position.width, 20);
             searchRect.x += 8;
+            searchRect.y += 8;
             searchRect.width -= 16;
 
             GUI.SetNextControlName("ComponentSearch");
@@ -482,6 +483,7 @@ namespace UnityExtended
                 {
                     case KeyCode.PageUp:
                         {
+                            ActiveParent.SelectedIndex--;
                             ActiveParent.SelectedIndex = 0;
                             scrollToSelected = true;
                             curentEvent.Use();

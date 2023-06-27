@@ -21,7 +21,7 @@ namespace UnityExtended
         /// <param name="view">Data renderer in a editor window</param>
         /// <param name="screenPosition">Point coordinates to display on the screen</param>
         /// <param name="size">Size window</param>
-        public static void Show(IEditorView view, Vector2 screenPosition, Vector2 size = default)
+        public static DropDownWindow Show(IEditorView view, Vector2 screenPosition, Vector2 size = default)
         {
             float width = System.Math.Max(size.x, defaultWidth);
             float height = System.Math.Max(size.y, defaultHeight);
@@ -30,12 +30,11 @@ namespace UnityExtended
             var instance = (DropDownWindow)CreateInstance(typeof(DropDownWindow));
             instance.hideFlags = HideFlags.HideAndDontSave;
             instance.View = view;
-
             instance.ShowAsDropDown(buttonRect, new Vector2(buttonRect.width, height));
-
             instance.Focus();
-
             instance.wantsMouseMove = true;
+
+            return instance;
         }
 
         /// <summary>
