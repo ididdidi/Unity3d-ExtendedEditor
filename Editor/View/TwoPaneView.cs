@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
 namespace UnityExtended
 {
@@ -10,9 +11,10 @@ namespace UnityExtended
         public const float LEFT_WEIGHT = 1f;
         public const float RIGHT_WEIGHT = 1f;
 
-        private IContext parent;
-        private IContext leftPane;
-        private IContext rightPane;
+        public Color background = new Color(0.22f, 0.22f, 0.22f);
+    //    private IContext parent;
+    //    private IContext leftPane;
+    //    private IContext rightPane;
 
         private IEditorView leftView;
         private IEditorView rightView;
@@ -45,15 +47,15 @@ namespace UnityExtended
         {
             if (context == null) { throw new System.ArgumentNullException(nameof(leftView)); }
 
-            if (parent != context)
-            {
-                parent = context;
-                leftPane = GetPane(parent, leftWidthK);
-                rightPane = GetPane(parent, rightWidthK, parent.position.width * leftWidthK);
-            }
+           // if (parent != context)
+           // {
+           //     parent = context;
+           //     leftPane = GetPane(parent, leftWidthK);
+           //     rightPane = GetPane(parent, rightWidthK, parent.position.width * leftWidthK);
+           // }
 
-            leftView?.OnGUI(leftPane);
-            rightView?.OnGUI(rightPane);
+            leftView?.OnGUI(GetPane(context, leftWidthK));
+            rightView?.OnGUI(GetPane(context, rightWidthK, context.position.width * leftWidthK));
         }
 
         /// <summary>
@@ -67,7 +69,8 @@ namespace UnityExtended
         {
             var layout = new EditorPane(context);
             var width = context.position.width * ratio;
-            layout.position = new Rect(0 + ofset, 0, (ofset == 0f)? width + 1 : width, context.position.height);
+            layout.position = new Rect(0f + ofset, 0f, (ofset == 0f)? width + 1f : width, context.position.height);
+            EditorGUI.DrawRect(layout.position, background);
             return layout;
         }
     }
