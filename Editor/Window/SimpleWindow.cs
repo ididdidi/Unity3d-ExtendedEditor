@@ -9,7 +9,7 @@ namespace UnityExtended
         public const float MIN_HIGHT = 320f;
 
         // Data renderer in a editor window
-        public IEditorView View { get; private set; }
+        public IEditorView View { get; protected set; }
 
         /// <summary>
         /// Creation of initialization and display of a window on the monitor screen.
