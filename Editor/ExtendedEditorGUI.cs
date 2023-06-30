@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace UnityExtended
@@ -43,7 +44,7 @@ namespace UnityExtended
         /// </summary>
         /// <param name="rect"><see cref="Rect"/></param>
         /// <param name="tooltip">Tooltip on hover</param>
-        /// <returns></returns>
+        /// <returns>Button is pressed</returns>
         public static bool CancelButton(Rect rect, string tooltip = null)
         {
             GUIContent iconButton = EditorGUIUtility.TrIconContent("Toolbar Minus", tooltip);
@@ -56,22 +57,50 @@ namespace UnityExtended
         /// </summary>
         /// <param name="position">Field position</param>
         /// <param name="keyword">Search keyword</param>
-        /// <returns>New search keyword</returns>
-        public static string SearchField(Rect position, string keyword)
+        /// <returns>ControlId</returns>
+        public static int SearchField(Rect position, ref string keyword)
         {
+            Event current = Event.current;
+
             var buttonSize = EditorGUIUtility.singleLineHeight;
-            Rect textRect = position;
-            textRect.width -= buttonSize / 2;
-            keyword = GUI.TextField(textRect, keyword, EditorStyles.toolbarSearchField);
-            Rect buttonRect = position;
-            buttonRect.x += position.width - buttonSize / 2;
-            buttonRect.width = buttonSize;
-            if (!string.IsNullOrEmpty(keyword) && CancelButton(buttonRect))
+            Rect rect = position;
+            rect.width -= buttonSize / 2;
+
+            keyword = GUI.TextField(rect, keyword, EditorStyles.toolbarSearchField);
+            int controlId = GetLastControlId();
+
+            rect.x += rect.width;
+            rect.width = buttonSize;
+            // Clear search keyword
+            if (keyword != string.Empty && CancelButton(rect) || (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape))
             {
-                keyword = "";
+                keyword = string.Empty;
                 GUIUtility.keyboardControl = 0;
             }
-            return keyword;
+            // Unfocus search field
+            else if (current.type == EventType.MouseUp)
+            {
+                if (controlId != GUIUtility.hotControl && controlId == GUIUtility.keyboardControl)
+                {
+                    GUIUtility.keyboardControl = 0;
+                    EditorGUIUtility.editingTextField = false;
+                    current.Use();
+                }
+            }
+
+            return controlId;
+        }
+
+        /// <summary>
+        /// Return last control ID setted in GUI
+        /// </summary>
+        /// <returns>Last control ID setted</returns>
+        public static int GetLastControlId()
+        {
+            FieldInfo getLastControlId = typeof(EditorGUIUtility).GetField("s_LastControlID", BindingFlags.Static | BindingFlags.NonPublic);
+            if (getLastControlId != null)
+                return (int)getLastControlId.GetValue(null);
+            return 0;
         }
 
         /// <summary>

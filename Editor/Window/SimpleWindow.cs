@@ -15,9 +15,9 @@ namespace UnityExtended
         /// Creation of initialization and display of a window on the monitor screen.
         /// </summary>
         /// <param name="view">Data renderer in a editor window</param>
-        public static SimpleWindow Show(IEditorView view, float minWidth = MIN_WIDTH, float minHight = MIN_HIGHT)
+        public static T Show<T>(IEditorView view, float minWidth = MIN_WIDTH, float minHight = MIN_HIGHT) where T : SimpleWindow
         {
-            var instance = (SimpleWindow)GetWindow(typeof(SimpleWindow));
+            var instance = GetWindow<T>();
             
             instance.hideFlags = HideFlags.HideAndDontSave;
             instance.View = view;

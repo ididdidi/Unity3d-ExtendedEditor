@@ -28,7 +28,6 @@ namespace UnityExtended
 
         // Static variables
         private static Styles styles;
-        private static bool isChanged = false;
 
         // Member variables
         private string searchKeyword = "";
@@ -36,6 +35,9 @@ namespace UnityExtended
         private SearchTreeEntry[] currentTree;
         private SearchTreeEntry[] searchResultTree;
         private List<SearchTreeGroupEntry> selectionStack = new List<SearchTreeGroupEntry>();
+        private bool isChanged = false;
+        private bool grabFocus;
+        private int controlId;
 
         // Animation variables
         private string delayedSearch = null;
@@ -46,9 +48,10 @@ namespace UnityExtended
         #endregion
 
         // Constructor
-        public SearchTreeView(ISearchTreeProvider provider)
+        public SearchTreeView(ISearchTreeProvider provider, bool grabFocus = true)
         {
             this.provider = provider;
+            this.grabFocus = grabFocus;
             isChanged = true;
         }
 
@@ -66,7 +69,7 @@ namespace UnityExtended
                 return selectionStack[index];
             }
         }
-        private SearchTreeEntry[] ActiveTree { get { return !SearchKeyIsEmpty ? searchResultTree : currentTree; } }
+        private SearchTreeEntry[] ActiveTree { get => (!SearchKeyIsEmpty) ? searchResultTree : currentTree; }
         private SearchTreeEntry ActiveSearchEntry
         {
             get
@@ -81,7 +84,8 @@ namespace UnityExtended
                 return children[ActiveParent.SelectedIndex];
             }
         }
-        private bool isAnimating { get { return currentAnimation != targetAnimation; } }
+        private bool isAnimating { get => currentAnimation != targetAnimation; }
+        private bool isOnFocus { get => GUIUtility.keyboardControl == controlId || GUIUtility.keyboardControl == 0; }
         #endregion
 
         /// <summary>
@@ -240,18 +244,18 @@ namespace UnityExtended
             GUILayout.Space(7);
 
             // Search
-            EditorGUI.FocusTextInControl("ComponentSearch");
+            if (grabFocus) { EditorGUI.FocusTextInControl("ComponentSearch"); }
 
             Rect searchRect = new Rect(0, 0, context.position.width, 20);
             searchRect.x += 8;
             searchRect.y += 8;
             searchRect.width -= 16;
 
-            GUI.SetNextControlName("ComponentSearch");
+            if (grabFocus) { GUI.SetNextControlName("ComponentSearch"); }
 
             EditorGUI.BeginChangeCheck();
-
-            string newSearch = ExtendedEditorGUI.SearchField(searchRect, delayedSearch ?? searchKeyword);
+            var newSearch = delayedSearch ?? searchKeyword;
+            controlId = ExtendedEditorGUI.SearchField(searchRect, ref newSearch);
 
             if (EditorGUI.EndChangeCheck() && (newSearch != searchKeyword || delayedSearch != null))
             {
@@ -387,6 +391,7 @@ namespace UnityExtended
                 {
                     selected = true;
                     selectedRect = entryRect;
+                    provider.OnFocusEntry(entry);
                 }
 
                 // Draw SearchTreeEntry
@@ -477,7 +482,7 @@ namespace UnityExtended
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
         private void HandleKeyboard(IContext context, Event curentEvent)
         {
-            if (curentEvent.type == EventType.KeyDown)
+            if (curentEvent.type == EventType.KeyDown && isOnFocus)
             {
                 switch (curentEvent.keyCode)
                 {

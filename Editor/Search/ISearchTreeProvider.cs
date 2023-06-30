@@ -3,6 +3,7 @@
     public interface ISearchTreeProvider
     {
         SearchTreeEntry[] CreateSearchTree();
-        bool OnSelectEntry(SearchTreeEntry SearchTreeEntry);
+        void OnFocusEntry(SearchTreeEntry entry);
+        bool OnSelectEntry(SearchTreeEntry entry);
     }
 }
