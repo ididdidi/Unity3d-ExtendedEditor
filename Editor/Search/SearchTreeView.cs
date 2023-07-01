@@ -35,7 +35,6 @@ namespace UnityExtended
         private SearchTreeEntry[] currentTree;
         private SearchTreeEntry[] searchResultTree;
         private List<SearchTreeGroupEntry> selectionStack = new List<SearchTreeGroupEntry>();
-        private bool isChanged = false;
         private bool grabFocus;
         private int controlId;
 
@@ -52,10 +51,11 @@ namespace UnityExtended
         {
             this.provider = provider;
             this.grabFocus = grabFocus;
-            isChanged = true;
+            IsChanged = true;
         }
 
         #region Properties
+        public bool IsChanged { get; set; }
         private bool SearchKeyIsEmpty { get { return string.IsNullOrEmpty(searchKeyword); } }
         private SearchTreeGroupEntry ActiveParent
         {
@@ -93,12 +93,7 @@ namespace UnityExtended
         /// </summary>
         private void CreateSearchTree()
         {
-            var tree = provider.CreateSearchTree();
-
-            if (tree != null)
-                currentTree = tree;
-            else
-                currentTree = new SearchTreeEntry[0];
+            currentTree = provider.CreateSearchTree() ?? new SearchTreeEntry[0];
 
             // Rebuild stack
             if (selectionStack.Count == 0)
@@ -136,7 +131,7 @@ namespace UnityExtended
                 }
             }
 
-            isChanged = false;
+            IsChanged = false;
             RebuildSearch();
         }
 
@@ -236,7 +231,7 @@ namespace UnityExtended
 
             GUI.Label(new Rect(0, 0, context.position.width, context.position.height), GUIContent.none, styles.background);
 
-            if (isChanged) { CreateSearchTree(); }
+            if (IsChanged) { CreateSearchTree(); }
 
             // Keyboard
             HandleKeyboard(context, Event.current);
@@ -254,8 +249,7 @@ namespace UnityExtended
             if (grabFocus) { GUI.SetNextControlName("ComponentSearch"); }
 
             EditorGUI.BeginChangeCheck();
-            var newSearch = delayedSearch ?? searchKeyword;
-            controlId = ExtendedEditorGUI.SearchField(searchRect, ref newSearch);
+            var newSearch = ExtendedEditorGUI.SearchField(searchRect, delayedSearch ?? searchKeyword, out controlId);
 
             if (EditorGUI.EndChangeCheck() && (newSearch != searchKeyword || delayedSearch != null))
             {

@@ -57,38 +57,46 @@ namespace UnityExtended
         /// </summary>
         /// <param name="position">Field position</param>
         /// <param name="keyword">Search keyword</param>
-        /// <returns>ControlId</returns>
-        public static int SearchField(Rect position, ref string keyword)
+        /// <param name="controlID">Field control ID</param>
+        /// <returns>New search keyword</returns>
+        public static string SearchField(Rect position, string keyword, out int controlID)
         {
-            Event current = Event.current;
-
             var buttonSize = EditorGUIUtility.singleLineHeight;
             Rect rect = position;
             rect.width -= buttonSize / 2;
 
-            keyword = GUI.TextField(rect, keyword, EditorStyles.toolbarSearchField);
-            int controlId = GetLastControlId();
+            keyword = EditorGUI.TextField(rect, GUIContent.none, keyword, EditorStyles.toolbarSearchField);
+            controlID = GetLastControlId();
 
             rect.x += rect.width;
             rect.width = buttonSize;
             // Clear search keyword
-            if (keyword != string.Empty && CancelButton(rect) || (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape))
+            if (keyword != string.Empty && CancelButton(rect))
             {
                 keyword = string.Empty;
                 GUIUtility.keyboardControl = 0;
             }
             // Unfocus search field
-            else if (current.type == EventType.MouseUp)
+            else
             {
-                if (controlId != GUIUtility.hotControl && controlId == GUIUtility.keyboardControl)
+                controlID.ReleaseOnClick();
+            }
+
+            return keyword;
+        }
+
+        public static void ReleaseOnClick(this int controlID, Event @event = null)
+        {
+            var current = @event ?? Event.current;
+            if (controlID != 0 && current.type == EventType.MouseUp)
+            {
+                if (controlID != GUIUtility.hotControl && controlID == GUIUtility.keyboardControl)
                 {
                     GUIUtility.keyboardControl = 0;
                     EditorGUIUtility.editingTextField = false;
                     current.Use();
                 }
             }
-
-            return controlId;
         }
 
         /// <summary>
