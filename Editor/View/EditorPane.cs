@@ -27,6 +27,9 @@ namespace UnityExtended
         /// </summary>
         public Rect position { get => rect; set => rect = value; }
 
+        public float Width { get => rect.width; set => rect.width = value; }
+        public float Height { get => rect.height; set => rect.height = value; }
+
         /// <summary>
         /// Method to close the inspector window and stop displaying data.
         /// </summary>

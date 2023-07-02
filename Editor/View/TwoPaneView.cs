@@ -47,13 +47,6 @@ namespace UnityExtended
         {
             if (context == null) { throw new System.ArgumentNullException(nameof(leftView)); }
 
-           // if (parent != context)
-           // {
-           //     parent = context;
-           //     leftPane = GetPane(parent, leftWidthK);
-           //     rightPane = GetPane(parent, rightWidthK, parent.position.width * leftWidthK);
-           // }
-
             leftView?.OnGUI(GetPane(context, leftWidthK));
             rightView?.OnGUI(GetPane(context, rightWidthK, context.position.width * leftWidthK));
         }

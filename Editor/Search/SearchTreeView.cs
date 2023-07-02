@@ -11,14 +11,14 @@ namespace UnityExtended
     public class SearchTreeView : IEditorView
     {
         // Styles
-        class Styles
+        static class Styles
         {
-            public GUIStyle header = "AC BoldHeader";
-            public GUIStyle componentButton = "AC ComponentButton";
-            public GUIStyle groupButton = "AC GroupButton";
-            public GUIStyle background = "grey_border";
-            public GUIStyle rightArrow = "ArrowNavigationRight";
-            public GUIStyle leftArrow = "ArrowNavigationLeft";
+            public static GUIStyle header = "AC BoldHeader";
+            public static GUIStyle componentButton = "AC ComponentButton";
+            public static GUIStyle groupButton = "AC GroupButton";
+            public static GUIStyle background = "grey_border";
+            public static GUIStyle rightArrow = "ArrowNavigationRight";
+            public static GUIStyle leftArrow = "ArrowNavigationLeft";
         }
 
         #region Fields
@@ -26,11 +26,8 @@ namespace UnityExtended
         private const int headerHeight = 30;
         private const string searchHeader = "Search";
 
-        // Static variables
-        private static Styles styles;
-
         // Member variables
-        private string searchKeyword = "";
+        private string searchKeyword = string.Empty;
         private ISearchTreeProvider provider;
         private SearchTreeEntry[] currentTree;
         private SearchTreeEntry[] searchResultTree;
@@ -227,30 +224,22 @@ namespace UnityExtended
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
         public void OnGUI(IContext context)
         {
-            if (styles == null) { styles = new Styles(); }
-
-            GUI.Label(new Rect(0, 0, context.position.width, context.position.height), GUIContent.none, styles.background);
+            GUI.Label(new Rect(0, 0, context.position.width, context.position.height), GUIContent.none, Styles.background);
 
             if (IsChanged) { CreateSearchTree(); }
 
             // Keyboard
             HandleKeyboard(context, Event.current);
 
-            GUILayout.Space(7);
-
             // Search
-            if (grabFocus) { EditorGUI.FocusTextInControl("ComponentSearch"); }
-
             Rect searchRect = new Rect(0, 0, context.position.width, 20);
             searchRect.x += 8;
             searchRect.y += 8;
             searchRect.width -= 16;
 
-            if (grabFocus) { GUI.SetNextControlName("ComponentSearch"); }
-
+            GUI.SetNextControlName("SearchField");
             EditorGUI.BeginChangeCheck();
             var newSearch = ExtendedEditorGUI.SearchField(searchRect, delayedSearch ?? searchKeyword, out controlId);
-
             if (EditorGUI.EndChangeCheck() && (newSearch != searchKeyword || delayedSearch != null))
             {
                 if (!isAnimating)
@@ -261,6 +250,8 @@ namespace UnityExtended
                 }
                 else {  delayedSearch = newSearch; }
             }
+
+            if (grabFocus) { grabFocus = false; EditorGUI.FocusTextInControl("SearchField"); }
 
             // Show lists
             ListGUI(context, ActiveTree, currentAnimation, GetReturnGroupEntry(0), GetReturnGroupEntry(-1));
@@ -321,18 +312,18 @@ namespace UnityExtended
             // Header
             Rect headerRect = GUILayoutUtility.GetRect(10, 25);
             string name = parent.Name;
-            GUI.Label(headerRect, name, styles.header);
+            GUI.Label(headerRect, name, Styles.header);
 
             // Back button
             if (grandParent != null)
             {
-                float yOffset = (headerRect.height - styles.leftArrow.fixedHeight) / 2;
+                float yOffset = (headerRect.height - Styles.leftArrow.fixedHeight) / 2;
                 Rect arrowRect = new Rect(
-                    headerRect.x + styles.leftArrow.margin.left,
+                    headerRect.x + Styles.leftArrow.margin.left,
                     headerRect.y + yOffset,
-                    styles.leftArrow.fixedWidth,
-                    styles.leftArrow.fixedHeight);
-                if (Event.current.type == EventType.Repaint) { styles.leftArrow.Draw(arrowRect, false, false, false, false); }
+                    Styles.leftArrow.fixedWidth,
+                    Styles.leftArrow.fixedHeight);
+                if (Event.current.type == EventType.Repaint) { Styles.leftArrow.Draw(arrowRect, false, false, false, false); }
                     
                 if (Event.current.type == EventType.MouseDown && headerRect.Contains(Event.current.mousePosition))
                 {
@@ -353,10 +344,11 @@ namespace UnityExtended
         /// <param name="parent">The parent entry of the search tree</param>
         private void ListGUI(IContext context, SearchTreeEntry[] tree, SearchTreeGroupEntry parent)
         {
+            var height = EditorGUIUtility.singleLineHeight;
             // Start of scroll view list
             parent.ScrollPosition = GUILayout.BeginScrollView(parent.ScrollPosition);
 
-            EditorGUIUtility.SetIconSize(new Vector2(16, 16));
+            EditorGUIUtility.SetIconSize(new Vector2(height, height));
 
             SearchTreeEntry[] children = parent.GetChildren(tree, SearchKeyIsEmpty);
 
@@ -366,7 +358,7 @@ namespace UnityExtended
             for (int i = 0; i < children.Length; i++)
             {
                 SearchTreeEntry entry = children[i];
-                Rect entryRect = GUILayoutUtility.GetRect(16, 20, GUILayout.ExpandWidth(true));
+                Rect entryRect = GUILayoutUtility.GetRect(height, height + 2, GUILayout.ExpandWidth(true));
 
                 // Select the SearchTreeEntry the mouse cursor is over.
                 // Only do it on mouse move - keyboard controls are allowed to overwrite this until the next time the mouse moves.
@@ -391,17 +383,17 @@ namespace UnityExtended
                 // Draw SearchTreeEntry
                 if (Event.current.type == EventType.Repaint)
                 {
-                    GUIStyle labelStyle = (entry is SearchTreeGroupEntry) ? styles.groupButton : styles.componentButton;
+                    GUIStyle labelStyle = (entry is SearchTreeGroupEntry) ? Styles.groupButton : Styles.componentButton;
                     labelStyle.Draw(entryRect, entry.Content, false, false, selected, selected);
                     if (entry is SearchTreeGroupEntry)
                     {
-                        float yOffset = (entryRect.height - styles.rightArrow.fixedHeight) / 2;
+                        float yOffset = (entryRect.height - Styles.rightArrow.fixedHeight) / 2;
                         Rect arrowRect = new Rect(
-                            entryRect.xMax - styles.rightArrow.fixedWidth - styles.rightArrow.margin.right,
+                            entryRect.xMax - Styles.rightArrow.fixedWidth - Styles.rightArrow.margin.right,
                             entryRect.y + yOffset,
-                            styles.rightArrow.fixedWidth,
-                            styles.rightArrow.fixedHeight);
-                        styles.rightArrow.Draw(arrowRect, false, false, false, false);
+                            Styles.rightArrow.fixedWidth,
+                            Styles.rightArrow.fixedHeight);
+                        Styles.rightArrow.Draw(arrowRect, false, false, false, false);
                     }
                 }
                 if (Event.current.type == EventType.MouseDown && entryRect.Contains(Event.current.mousePosition))
@@ -409,6 +401,8 @@ namespace UnityExtended
                     Event.current.Use();
                     parent.SelectedIndex = i;
                     SelectEntry(context, entry, true);
+                    // Reset Focus
+                    EditorGUI.FocusTextInControl(null);
                 }
             }
 

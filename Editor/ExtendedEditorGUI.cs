@@ -22,6 +22,15 @@ namespace UnityExtended
             return new Rect(new Vector2(rect.x + dX + padding.x, rect.y + dY + padding.y), new Vector2(size.x - padding.x * 2f, size.y - padding.y * 2f));
         }
 
+
+        public static void DrawLine(Color color, float height = 1f)
+        {
+            Rect rect = EditorGUILayout.GetControlRect(false, height);
+            rect.height = height;
+            EditorGUI.DrawRect(rect, color);
+
+        }
+
         /// <summary>
         /// Drawing the button in the center of the layout
         /// </summary>
@@ -61,6 +70,7 @@ namespace UnityExtended
         /// <returns>New search keyword</returns>
         public static string SearchField(Rect position, string keyword, out int controlID)
         {
+            var @event = Event.current;
             var buttonSize = EditorGUIUtility.singleLineHeight;
             Rect rect = position;
             rect.width -= buttonSize / 2;
@@ -71,7 +81,7 @@ namespace UnityExtended
             rect.x += rect.width;
             rect.width = buttonSize;
             // Clear search keyword
-            if (keyword != string.Empty && CancelButton(rect))
+            if (keyword != string.Empty && CancelButton(rect) || (@event.type == EventType.KeyDown && @event.keyCode == KeyCode.Escape))
             {
                 keyword = string.Empty;
                 GUIUtility.keyboardControl = 0;
@@ -79,9 +89,8 @@ namespace UnityExtended
             // Unfocus search field
             else
             {
-                controlID.ReleaseOnClick();
+                controlID.ReleaseOnClick(@event);
             }
-
             return keyword;
         }
 
