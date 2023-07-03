@@ -8,7 +8,7 @@ namespace UnityExtended
     /// <summary>
     /// Class for displaying search in the Unity3d editor.
     /// </summary>
-    public class SearchTreeView : IEditorView
+    public class SearchTreeView
     {
         // Styles
         static class Styles
@@ -16,7 +16,7 @@ namespace UnityExtended
             public static GUIStyle header = "AC BoldHeader";
             public static GUIStyle componentButton = "AC ComponentButton";
             public static GUIStyle groupButton = "AC GroupButton";
-            public static GUIStyle background = "grey_border";
+            public static GUIStyle border = "grey_border";
             public static GUIStyle rightArrow = "ArrowNavigationRight";
             public static GUIStyle leftArrow = "ArrowNavigationLeft";
         }
@@ -25,9 +25,11 @@ namespace UnityExtended
         // Constants
         private const int headerHeight = 30;
         private const string searchHeader = "Search";
+        private readonly Color background = new Color(0.22f, 0.22f, 0.22f);
 
         // Member variables
         private string searchKeyword = string.Empty;
+        private EditorWindow window;
         private ISearchTreeProvider provider;
         private SearchTreeEntry[] currentTree;
         private SearchTreeEntry[] searchResultTree;
@@ -44,8 +46,9 @@ namespace UnityExtended
         #endregion
 
         // Constructor
-        public SearchTreeView(ISearchTreeProvider provider, bool grabFocus = true)
+        public SearchTreeView(EditorWindow window, ISearchTreeProvider provider, bool grabFocus = true)
         {
+            this.window = window;
             this.provider = provider;
             this.grabFocus = grabFocus;
             IsChanged = true;
@@ -222,20 +225,17 @@ namespace UnityExtended
         /// Method to display search field and tree.
         /// </summary>
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
-        public void OnGUI(IContext context)
+        public void OnGUI(Rect position)
         {
-            GUI.Label(new Rect(0, 0, context.position.width, context.position.height), GUIContent.none, Styles.background);
-
+            EditorGUI.DrawRect(position, background);
+            GUI.Label(position, GUIContent.none, Styles.border);
             if (IsChanged) { CreateSearchTree(); }
 
             // Keyboard
-            HandleKeyboard(context, Event.current);
+            HandleKeyboard(Event.current);
 
             // Search
-            Rect searchRect = new Rect(0, 0, context.position.width, 20);
-            searchRect.x += 8;
-            searchRect.y += 8;
-            searchRect.width -= 16;
+            Rect searchRect = new Rect(8, 8, position.width - 16, 20);
 
             GUI.SetNextControlName("SearchField");
             EditorGUI.BeginChangeCheck();
@@ -254,8 +254,8 @@ namespace UnityExtended
             if (grabFocus) { grabFocus = false; EditorGUI.FocusTextInControl("SearchField"); }
 
             // Show lists
-            ListGUI(context, ActiveTree, currentAnimation, GetReturnGroupEntry(0), GetReturnGroupEntry(-1));
-            if (currentAnimation < 1) { ListGUI(context, ActiveTree, currentAnimation + 1, GetReturnGroupEntry(-1), GetReturnGroupEntry(-2)); }
+            ListGUI(position, ActiveTree, currentAnimation, GetReturnGroupEntry(0), GetReturnGroupEntry(-1));
+            if (currentAnimation < 1) { ListGUI(position, ActiveTree, currentAnimation + 1, GetReturnGroupEntry(-1), GetReturnGroupEntry(-2)); }
 
             // Animate
             if (isAnimating && Event.current.type == EventType.Repaint)
@@ -270,7 +270,7 @@ namespace UnityExtended
                     targetAnimation = 1;
                     selectionStack.RemoveAt(selectionStack.Count - 1);
                 }
-                context?.Repaint();
+                window.Repaint();
             }
         }
 
@@ -294,14 +294,14 @@ namespace UnityExtended
         /// <param name="animationValue">Animation value at the moment</param>
         /// <param name="parent">The parent entry of the search tree</param>
         /// <param name="grandParent">The parent of the parent entry</param>
-        private void ListGUI(IContext context, SearchTreeEntry[] tree, float animationValue, SearchTreeGroupEntry parent, SearchTreeGroupEntry grandParent)
+        private void ListGUI(Rect position, SearchTreeEntry[] tree, float animationValue, SearchTreeGroupEntry parent, SearchTreeGroupEntry grandParent)
         {
             // Smooth the fractional part of the animation value
             animationValue = Mathf.Floor(animationValue) + Mathf.SmoothStep(0, 1, Mathf.Repeat(animationValue, 1));
 
             // Calculate rect for animated area
-            Rect animRect = context.position;
-            animRect.x = context.position.width * (1 - animationValue) + 1;
+            Rect animRect = position;
+            animRect.x = position.width * (1 - animationValue) + 1;
             animRect.y = headerHeight;
             animRect.height -= headerHeight;
             animRect.width -= 2;
@@ -332,7 +332,7 @@ namespace UnityExtended
                 }
             }
 
-            ListGUI(context, tree, parent);
+            ListGUI(tree, parent);
             GUILayout.EndArea();
         }
 
@@ -342,7 +342,7 @@ namespace UnityExtended
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
         /// <param name="tree">Search tree</param>
         /// <param name="parent">The parent entry of the search tree</param>
-        private void ListGUI(IContext context, SearchTreeEntry[] tree, SearchTreeGroupEntry parent)
+        private void ListGUI(SearchTreeEntry[] tree, SearchTreeGroupEntry parent)
         {
             var height = EditorGUIUtility.singleLineHeight;
             // Start of scroll view list
@@ -367,7 +367,7 @@ namespace UnityExtended
                     if (parent.SelectedIndex != i && entryRect.Contains(Event.current.mousePosition))
                     {
                         parent.SelectedIndex = i;
-                        context?.Repaint();
+                        window.Repaint();
                     }
                 }
 
@@ -400,7 +400,7 @@ namespace UnityExtended
                 {
                     Event.current.Use();
                     parent.SelectedIndex = i;
-                    SelectEntry(context, entry, true);
+                    SelectEntry(entry, true);
                     // Reset Focus
                     EditorGUI.FocusTextInControl(null);
                 }
@@ -418,12 +418,12 @@ namespace UnityExtended
                 if (selectedRect.yMax - scrollRect.height > parent.ScrollPosition.y)
                 {
                     parent.ScrollPosition.y = selectedRect.yMax - scrollRect.height;
-                    context?.Repaint();
+                    window.Repaint();
                 }
                 if (selectedRect.y < parent.ScrollPosition.y)
                 {
                     parent.ScrollPosition.y = selectedRect.y;
-                    context?.Repaint();
+                    window.Repaint();
                 }
             }
         }
@@ -434,7 +434,7 @@ namespace UnityExtended
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
         /// <param name="entry">Selected search tree entry</param>
         /// <param name="hasCallback">Should invoke callback</param>
-        private void SelectEntry(IContext context, SearchTreeEntry entry, bool hasCallback)
+        private void SelectEntry(SearchTreeEntry entry, bool hasCallback)
         {
             if (entry is SearchTreeGroupEntry group)
             {
@@ -449,7 +449,7 @@ namespace UnityExtended
                     }
                 }
             }
-            else if (hasCallback && provider.OnSelectEntry(entry)) { context.Close(); }
+            else if (hasCallback && provider.OnSelectEntry(entry)) { window.Close(); }
         }
 
         /// <summary>
@@ -468,7 +468,7 @@ namespace UnityExtended
         /// Handles keystrokes
         /// </summary>
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
-        private void HandleKeyboard(IContext context, Event curentEvent)
+        private void HandleKeyboard(Event curentEvent)
         {
             if (curentEvent.type == EventType.KeyDown && isOnFocus)
             {
@@ -508,7 +508,7 @@ namespace UnityExtended
                     case KeyCode.RightArrow:
                         if (SearchKeyIsEmpty && ActiveSearchEntry != null)
                         {
-                            SelectEntry(context, ActiveSearchEntry, false);
+                            SelectEntry(ActiveSearchEntry, false);
                             curentEvent.Use();
                         }
                         return;
@@ -522,14 +522,14 @@ namespace UnityExtended
                     case KeyCode.KeypadEnter:
                         if (ActiveSearchEntry != null)
                         {
-                            SelectEntry(context, ActiveSearchEntry, true);
+                            SelectEntry(ActiveSearchEntry, true);
                             curentEvent.Use();
                         }
                         return;
                     case KeyCode.Return:
                         if(ActiveSearchEntry != null)
                         {
-                            SelectEntry(context, ActiveSearchEntry, true);
+                            SelectEntry(ActiveSearchEntry, true);
                             curentEvent.Use();
                         }
                         return;
@@ -542,7 +542,7 @@ namespace UnityExtended
                         return;
                     case KeyCode.Escape:
                         {
-                            context.Close();
+                            window.Close();
                             curentEvent.Use();
                         }
                         return;

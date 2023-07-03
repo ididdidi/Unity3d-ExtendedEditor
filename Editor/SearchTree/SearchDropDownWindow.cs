@@ -6,30 +6,31 @@ namespace UnityExtended
     /// <summary>
     /// Class for creating and displaying a drop-down editor window.
     /// </summary>
-    public class DropDownWindow : EditorWindow, IContext
+    public class SearchDropDownWindow : EditorWindow
     {
         // Defaul size
         private const float defaultWidth = 240f;
         private const float defaultHeight = 320f;
 
         // Data renderer in a editor window
-        public IEditorView View{ get; private set; }
+        private SearchTreeView searchView;
 
         /// <summary>
         /// Creation of initialization and display of a window on the monitor screen.
         /// </summary>
-        /// <param name="view">Data renderer in a editor window</param>
-        /// <param name="screenPosition">Point coordinates to display on the screen</param>
+        /// <param name="provider">SearchTree data provider</param>
         /// <param name="size">Size window</param>
-        public static DropDownWindow Show(IEditorView view, Vector2 screenPosition, Vector2 size = default)
+        public static SearchDropDownWindow Show(ISearchTreeProvider provider, Vector2 size = default)
         {
             float width = System.Math.Max(size.x, defaultWidth);
             float height = System.Math.Max(size.y, defaultHeight);
+
+            Vector2 screenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
             Rect buttonRect = new Rect(screenPosition.x - width / 2, screenPosition.y - EditorGUIUtility.singleLineHeight, width, 1);
 
-            var instance = (DropDownWindow)CreateInstance(typeof(DropDownWindow));
+            var instance = (SearchDropDownWindow)CreateInstance(typeof(SearchDropDownWindow));
+            instance.searchView = new SearchTreeView(instance, provider);
             instance.hideFlags = HideFlags.HideAndDontSave;
-            instance.View = view;
             instance.ShowAsDropDown(buttonRect, new Vector2(buttonRect.width, height));
             instance.Focus();
             instance.wantsMouseMove = true;
@@ -40,6 +41,6 @@ namespace UnityExtended
         /// <summary>
         /// Method for rendering window content
         /// </summary>
-        internal void OnGUI() => View?.OnGUI(this);
+        internal void OnGUI() => searchView?.OnGUI(position);
     }
 }
