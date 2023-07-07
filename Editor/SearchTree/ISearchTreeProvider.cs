@@ -6,7 +6,7 @@
     /// </summary>
     public interface ISearchTreeProvider
     {
-        SearchTreeEntry[] CreateSearchTree();
+        SearchTree GetSearchTree();
         void OnFocusEntry(SearchTreeEntry entry);
         bool OnSelectEntry(SearchTreeEntry entry);
     }

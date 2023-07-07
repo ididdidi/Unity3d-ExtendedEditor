@@ -20,6 +20,13 @@ namespace UnityExtended
         public SearchTreeGroupEntry(GUIContent content, int level = 0) : base(content, level) { }
 
         /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="content">Cotent to display an item in a list</param>
+        /// <param name="level">Level in tree</param>
+        public SearchTreeGroupEntry(string content, int level = 0) : base(new GUIContent(content), level) { }
+
+        /// <summary>
         /// Returns a subset of search tree elements
         /// </summary>
         /// <param name="tree">Set of items to search</param>

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace UnityExtended
@@ -24,16 +22,13 @@ namespace UnityExtended
         #region Fields
         // Constants
         private const int headerHeight = 30;
-        private const string searchHeader = "Search";
         private readonly Color background = new Color(0.22f, 0.22f, 0.22f);
 
         // Member variables
-        private string searchKeyword = string.Empty;
+        private SearchTree searchTree;
+
         private EditorWindow window;
         private ISearchTreeProvider provider;
-        private SearchTreeEntry[] currentTree;
-        private SearchTreeEntry[] searchResultTree;
-        private List<SearchTreeGroupEntry> selectionStack = new List<SearchTreeGroupEntry>();
         private bool grabFocus;
         private int controlId;
 
@@ -51,33 +46,31 @@ namespace UnityExtended
             this.window = window;
             this.provider = provider;
             this.grabFocus = grabFocus;
-            IsChanged = true;
+            searchTree = provider.GetSearchTree();
         }
 
         #region Properties
         public bool IsChanged { get; set; }
-        private bool SearchKeyIsEmpty { get { return string.IsNullOrEmpty(searchKeyword); } }
         private SearchTreeGroupEntry ActiveParent
         {
             get
             {
-                int index = selectionStack.Count - 2 + targetAnimation;
+                int index = searchTree.selectionStack.Count - 2 + targetAnimation;
 
-                if (index < 0 || index >= selectionStack.Count)
+                if (index < 0 || index >= searchTree.selectionStack.Count)
                     return null;
 
-                return selectionStack[index];
+                return searchTree.selectionStack[index];
             }
         }
-        private SearchTreeEntry[] ActiveTree { get => (!SearchKeyIsEmpty) ? searchResultTree : currentTree; }
         private SearchTreeEntry ActiveSearchEntry
         {
             get
             {
-                if (ActiveTree == null)
+                if (searchTree.ActiveTree == null)
                     return null;
 
-                SearchTreeEntry[] children = ActiveParent.GetChildren(ActiveTree, SearchKeyIsEmpty);
+                SearchTreeEntry[] children = ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty);
                 if (ActiveParent == null || ActiveParent.SelectedIndex < 0 || ActiveParent.SelectedIndex >= children.Length)
                     return null;
 
@@ -89,139 +82,6 @@ namespace UnityExtended
         #endregion
 
         /// <summary>
-        /// Creating a tree for search
-        /// </summary>
-        private void CreateSearchTree()
-        {
-            currentTree = provider.CreateSearchTree() ?? new SearchTreeEntry[0];
-
-            // Rebuild stack
-            if (selectionStack.Count == 0)
-                selectionStack.Add(currentTree[0] as SearchTreeGroupEntry);
-            else
-            {
-                // The root is always the match for level 0
-                SearchTreeGroupEntry match = currentTree[0] as SearchTreeGroupEntry;
-                int level = 0;
-                while (true)
-                {
-                    // Assign the match for the current level
-                    SearchTreeGroupEntry oldSearchTreeEntry = selectionStack[level];
-                    selectionStack[level] = match;
-                    selectionStack[level].SelectedIndex = oldSearchTreeEntry.SelectedIndex;
-                    selectionStack[level].ScrollPosition = oldSearchTreeEntry.ScrollPosition;
-
-                    // See if we reached last SearchTreeEntry of stack
-                    level++;
-                    if (level == selectionStack.Count)
-                        break;
-
-                    // Try to find a child of the same name as we had before
-                    SearchTreeEntry[] children = match.GetChildren(ActiveTree, SearchKeyIsEmpty);
-                    SearchTreeEntry childMatch = children.FirstOrDefault(entry => entry.Name == selectionStack[level].Name);
-                    if (childMatch != null && childMatch is SearchTreeGroupEntry)
-                    {
-                        match = childMatch as SearchTreeGroupEntry;
-                    }
-                    else
-                    {
-                        // If we couldn't find the child, remove all further SearchTreeEntrys from the stack
-                        selectionStack.RemoveRange(level, selectionStack.Count - level);
-                    }
-                }
-            }
-
-            IsChanged = false;
-            RebuildSearch();
-        }
-
-        /// <summary>
-        /// Rebuil a search tree
-        /// </summary>
-        private void RebuildSearch()
-        {
-            if (SearchKeyIsEmpty)
-            {
-                searchResultTree = null;
-                if (selectionStack[selectionStack.Count - 1].Name == searchHeader)
-                {
-                    selectionStack.Clear();
-                    selectionStack.Add(currentTree[0] as SearchTreeGroupEntry);
-                }
-                targetAnimation = 1;
-                lastTime = System.DateTime.Now.Ticks;
-                return;
-            }
-
-            // Support multiple search words separated by spaces.
-            string[] searchWords = searchKeyword.ToLower().Split(' ');
-
-            // We keep two lists. Matches that matches the start of an item always get first priority.
-            List<SearchTreeEntry> matchesStart = new List<SearchTreeEntry>();
-            List<SearchTreeEntry> matchesWithin = new List<SearchTreeEntry>();
-
-            foreach (SearchTreeEntry entry in currentTree)
-            {
-                if (entry is SearchTreeGroupEntry)
-                    continue;
-
-                string name = entry.Name.ToLower().Replace(" ", "");
-                bool didMatchAll = true;
-                bool didMatchStart = false;
-
-                // See if we match ALL the seaarch words.
-                for (int w = 0; w < searchWords.Length; w++)
-                {
-                    string search = searchWords[w];
-                    if (name.Contains(search))
-                    {
-                        // If the start of the item matches the first search word, make a note of that.
-                        if (w == 0 && name.StartsWith(search))
-                            didMatchStart = true;
-                    }
-                    else
-                    {
-                        // As soon as any word is not matched, we disregard this item.
-                        didMatchAll = false;
-                        break;
-                    }
-                }
-                // We always need to match all search words.
-                // If we ALSO matched the start, this item gets priority.
-                if (didMatchAll)
-                {
-                    if (didMatchStart)
-                        matchesStart.Add(entry);
-                    else
-                        matchesWithin.Add(entry);
-                }
-            }
-
-            matchesStart.Sort();
-            matchesWithin.Sort();
-
-            // Create search tree
-            List<SearchTreeEntry> tree = new List<SearchTreeEntry>();
-            // Add parent
-            tree.Add(new SearchTreeGroupEntry(new GUIContent(searchHeader)));
-            // Add search results
-            tree.AddRange(matchesStart);
-            tree.AddRange(matchesWithin);
-
-            // Create search result tree
-            searchResultTree = tree.ToArray();
-            selectionStack.Clear();
-            selectionStack.Add(searchResultTree[0] as SearchTreeGroupEntry);
-
-            // Always select the first search result when search is changed (e.g. a character was typed in or deleted),
-            // because it's usually the best match.
-            if (ActiveParent.GetChildren(ActiveTree, SearchKeyIsEmpty).Length >= 1)
-                ActiveParent.SelectedIndex = 0;
-            else
-                ActiveParent.SelectedIndex = -1;
-        }
-
-        /// <summary>
         /// Method to display search field and tree.
         /// </summary>
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
@@ -229,7 +89,15 @@ namespace UnityExtended
         {
             EditorGUI.DrawRect(position, background);
             GUI.Label(position, GUIContent.none, Styles.border);
-            if (IsChanged) { CreateSearchTree(); }
+            if (IsChanged) {
+                searchTree = provider.GetSearchTree();
+                if (searchTree.SearchKeyIsEmpty)
+                {
+                    targetAnimation = 1;
+                    lastTime = System.DateTime.Now.Ticks;
+                }
+                IsChanged = false;
+            }
 
             // Keyboard
             HandleKeyboard(Event.current);
@@ -239,13 +107,19 @@ namespace UnityExtended
 
             GUI.SetNextControlName("SearchField");
             EditorGUI.BeginChangeCheck();
-            var newSearch = ExtendedEditorGUI.SearchField(searchRect, delayedSearch ?? searchKeyword, out controlId);
-            if (EditorGUI.EndChangeCheck() && (newSearch != searchKeyword || delayedSearch != null))
+            var newSearch = ExtendedEditorGUI.SearchField(searchRect, delayedSearch ?? searchTree.keyword, out controlId);
+            if (EditorGUI.EndChangeCheck() && (newSearch != searchTree.keyword || delayedSearch != null))
             {
                 if (!isAnimating)
                 {
-                    searchKeyword = delayedSearch ?? newSearch;
-                    RebuildSearch();
+                    searchTree.keyword = delayedSearch ?? newSearch;
+                    searchTree.Update();
+                    // Always select the first search result when search is changed (e.g. a character was typed in or deleted),
+                    // because it's usually the best match.
+                    if (ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty).Length >= 1)
+                        ActiveParent.SelectedIndex = 0;
+                    else
+                        ActiveParent.SelectedIndex = -1;
                     delayedSearch = null;
                 }
                 else {  delayedSearch = newSearch; }
@@ -254,8 +128,8 @@ namespace UnityExtended
             if (grabFocus) { grabFocus = false; EditorGUI.FocusTextInControl("SearchField"); }
 
             // Show lists
-            ListGUI(position, ActiveTree, currentAnimation, GetReturnGroupEntry(0), GetReturnGroupEntry(-1));
-            if (currentAnimation < 1) { ListGUI(position, ActiveTree, currentAnimation + 1, GetReturnGroupEntry(-1), GetReturnGroupEntry(-2)); }
+            ListGUI(position, searchTree.ActiveTree, currentAnimation, searchTree.GetReturnGroupEntry(0), searchTree.GetReturnGroupEntry(-1));
+            if (currentAnimation < 1) { ListGUI(position, searchTree.ActiveTree, currentAnimation + 1, searchTree.GetReturnGroupEntry(-1), searchTree.GetReturnGroupEntry(-2)); }
 
             // Animate
             if (isAnimating && Event.current.type == EventType.Repaint)
@@ -268,22 +142,10 @@ namespace UnityExtended
                 {
                     currentAnimation = 1;
                     targetAnimation = 1;
-                    selectionStack.RemoveAt(selectionStack.Count - 1);
+                    searchTree.selectionStack.RemoveAt(searchTree.selectionStack.Count - 1);
                 }
                 window.Repaint();
             }
-        }
-
-        /// <summary>
-        /// Method for getting the parent entries of the search tree
-        /// </summary>
-        /// <param name="relativelayer"></param>
-        /// <returns>Return parent group entry if it exists</returns>
-        private SearchTreeGroupEntry GetReturnGroupEntry(int relativelayer)
-        {
-            int i = selectionStack.Count + relativelayer - 1;
-            if (i < 0 || i >= selectionStack.Count) { return null; }
-            else { return selectionStack[i] as SearchTreeGroupEntry; }
         }
 
         /// <summary>
@@ -350,7 +212,7 @@ namespace UnityExtended
 
             EditorGUIUtility.SetIconSize(new Vector2(height, height));
 
-            SearchTreeEntry[] children = parent.GetChildren(tree, SearchKeyIsEmpty);
+            SearchTreeEntry[] children = parent.GetChildren(tree, searchTree.SearchKeyIsEmpty);
 
             Rect selectedRect = new Rect();
 
@@ -438,14 +300,14 @@ namespace UnityExtended
         {
             if (entry is SearchTreeGroupEntry group)
             {
-                if (SearchKeyIsEmpty)
+                if (searchTree.SearchKeyIsEmpty)
                 {
                     lastTime = System.DateTime.Now.Ticks;
                     if (targetAnimation == 0) { targetAnimation = 1; }
                     else if (currentAnimation == 1)
                     {
                         currentAnimation = 0;
-                        selectionStack.Add(group);
+                        searchTree.selectionStack.Add(group);
                     }
                 }
             }
@@ -457,7 +319,7 @@ namespace UnityExtended
         /// </summary>
         private void GoToParent()
         {
-            if (selectionStack.Count > 1)
+            if (searchTree.selectionStack.Count > 1)
             {
                 targetAnimation = 0;
                 lastTime = System.DateTime.Now.Ticks;
@@ -484,7 +346,7 @@ namespace UnityExtended
                         return;
                     case KeyCode.PageDown:
                         {
-                            ActiveParent.SelectedIndex = ActiveParent.GetChildren(ActiveTree, SearchKeyIsEmpty).Length - 1;
+                            ActiveParent.SelectedIndex = ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty).Length - 1;
                             scrollToSelected = true;
                             curentEvent.Use();
                         }
@@ -500,20 +362,20 @@ namespace UnityExtended
                     case KeyCode.DownArrow:
                         {
                             ActiveParent.SelectedIndex++;
-                            ActiveParent.SelectedIndex = Mathf.Min(ActiveParent.SelectedIndex, ActiveParent.GetChildren(ActiveTree, SearchKeyIsEmpty).Length - 1);
+                            ActiveParent.SelectedIndex = Mathf.Min(ActiveParent.SelectedIndex, ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty).Length - 1);
                             scrollToSelected = true;
                             curentEvent.Use();
                         }
                         return;
                     case KeyCode.RightArrow:
-                        if (SearchKeyIsEmpty && ActiveSearchEntry != null)
+                        if (searchTree.SearchKeyIsEmpty && ActiveSearchEntry != null)
                         {
                             SelectEntry(ActiveSearchEntry, false);
                             curentEvent.Use();
                         }
                         return;
                     case KeyCode.LeftArrow:
-                        if (SearchKeyIsEmpty)
+                        if (searchTree.SearchKeyIsEmpty)
                         {
                             GoToParent();
                             curentEvent.Use();
@@ -534,7 +396,7 @@ namespace UnityExtended
                         }
                         return;
                     case KeyCode.Backspace:
-                        if (SearchKeyIsEmpty)
+                        if (searchTree.SearchKeyIsEmpty)
                         {
                             GoToParent();
                             curentEvent.Use();
