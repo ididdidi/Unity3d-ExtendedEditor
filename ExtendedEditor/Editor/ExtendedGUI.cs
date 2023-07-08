@@ -7,7 +7,7 @@ namespace UnityExtended
     /// <summary>
     /// Class that complements the capabilities of the editor GUI
     /// </summary>
-    public static partial class ExtendedEditorGUI
+    public partial class ExtendedEditor
     {
         /// <summary>
         /// Provides a new rect on top of the existing one.
@@ -22,7 +22,11 @@ namespace UnityExtended
             return new Rect(new Vector2(rect.x + dX + padding.x, rect.y + dY + padding.y), new Vector2(size.x - padding.x * 2f, size.y - padding.y * 2f));
         }
 
-
+        /// <summary>
+        /// Draws a line of the given color and thickness in the inspector.
+        /// </summary>
+        /// <param name="color">line color</param>
+        /// <param name="height">line thickness</param>
         public static void DrawLine(Color color, float height = 1f)
         {
             Rect rect = EditorGUILayout.GetControlRect(false, height);
@@ -89,12 +93,17 @@ namespace UnityExtended
             // Unfocus search field
             else
             {
-                controlID.ReleaseOnClick(@event);
+                UnfocusOnClick(controlID, @event);
             }
             return keyword;
         }
 
-        public static void ReleaseOnClick(this int controlID, Event @event = null)
+        /// <summary>
+        /// Removes focus from the field when clicking elsewhere in the editor window.
+        /// </summary>
+        /// <param name="controlID">Field control id</param>
+        /// <param name="event">Current event</param>
+        public static void UnfocusOnClick(int controlID, Event @event = null)
         {
             var current = @event ?? Event.current;
             if (controlID != 0 && current.type == EventType.MouseUp)

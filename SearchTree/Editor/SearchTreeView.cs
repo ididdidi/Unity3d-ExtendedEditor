@@ -107,7 +107,7 @@ namespace UnityExtended
 
             GUI.SetNextControlName("SearchField");
             EditorGUI.BeginChangeCheck();
-            var newSearch = ExtendedEditorGUI.SearchField(searchRect, delayedSearch ?? searchTree.keyword, out controlId);
+            var newSearch = ExtendedEditor.SearchField(searchRect, delayedSearch ?? searchTree.keyword, out controlId);
             if (EditorGUI.EndChangeCheck() && (newSearch != searchTree.keyword || delayedSearch != null))
             {
                 if (!isAnimating)
@@ -399,12 +399,6 @@ namespace UnityExtended
                         if (searchTree.SearchKeyIsEmpty)
                         {
                             GoToParent();
-                            curentEvent.Use();
-                        }
-                        return;
-                    case KeyCode.Escape:
-                        {
-                            window.Close();
                             curentEvent.Use();
                         }
                         return;

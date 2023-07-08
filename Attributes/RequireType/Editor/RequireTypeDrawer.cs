@@ -30,7 +30,7 @@ namespace UnityExtended
             }
 
             var requiredType = ((RequireTypeAttribute)attribute).RequiredType;
-            ExtendedEditorGUI.ObjectField(position, property, requiredType, new GUIContent(label));
+            ExtendedEditor.ObjectField(position, property, requiredType, new GUIContent(label));
         }
     }
 }

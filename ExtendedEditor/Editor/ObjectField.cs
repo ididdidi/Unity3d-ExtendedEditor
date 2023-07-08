@@ -6,7 +6,7 @@ namespace UnityExtended
     /// <summary>
     /// Class that complements the capabilities of the editor GUI
     /// </summary>
-    public static partial class ExtendedEditorGUI
+    public partial class ExtendedEditor
     {
         /// <summary>
         /// Display a field for adding a reference to an object

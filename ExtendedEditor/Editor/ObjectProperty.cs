@@ -68,7 +68,7 @@ namespace UnityExtended
                     }
                     else
                     {
-                        ExtendedEditorGUI.DisplayMessage($"The {serializedProperty.displayName} field must not be empty!", MessageType.Error);
+                        DisplayMessage($"The {serializedProperty.displayName} field must not be empty!", MessageType.Error);
                     }
                     GUILayout.EndVertical();
                 }

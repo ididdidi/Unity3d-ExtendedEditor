@@ -41,6 +41,15 @@ namespace UnityExtended
         /// <summary>
         /// Method for rendering window content
         /// </summary>
-        internal void OnGUI() => searchView?.OnGUI(position);
+        internal void OnGUI()
+        {
+            searchView?.OnGUI(position);
+            var curentEvent = Event.current;
+            if (curentEvent.type == EventType.KeyDown && curentEvent.keyCode == KeyCode.Escape)
+            {
+                this.Close();
+                curentEvent.Use();
+            }
+        }
     }
 }

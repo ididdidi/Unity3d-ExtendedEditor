@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace UnityExtended
 {
+    /// <summary>
+    /// Encapsulates the current search tree.
+    /// </summary>
     public class SearchTree
     {
         private const string searchHeader = "Search";

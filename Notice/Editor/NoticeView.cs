@@ -4,7 +4,10 @@ using UnityEngine;
 
 namespace UnityExtended
 {
-    public class NoticeView
+	/// <summary>
+	/// Class for displaying a notification in the editor window.
+	/// </summary>
+	public class NoticeView
     {
         private EditorWindow window;
         private GUIContent noticeContent;
@@ -14,9 +17,16 @@ namespace UnityExtended
         private float fillAmount;
         private int taskID;
 
-        public NoticeView(EditorWindow window) => this.window = window ?? throw new System.ArgumentNullException(nameof(window));
+		/// <summary>
+		/// Constructor.
+		/// </summary>
+		/// <param name="window"><see cref="EditorWindow"/></param>
+		public NoticeView(EditorWindow window) => this.window = window ?? throw new System.ArgumentNullException(nameof(window));
 
-        public async void OnGUI()
+		/// <summary>
+		/// Method for rendering an animated notification. It is necessary to call the window method of the same name.
+		/// </summary>
+		public async void OnGUI()
 		{
 			if(!showNotice) { return; }
 
@@ -24,13 +34,14 @@ namespace UnityExtended
 			float deltaTime = (now - lastTime) / (float)System.TimeSpan.TicksPerSecond;
 			lastTime = now;
 
+			// Animate notification
 			if (fillAmount != 1f)
 			{
 				fillAmount = Mathf.MoveTowards(fillAmount, 1f, deltaTime * 2);
+				position.y = position.height * (fillAmount - 0.8f);
 			}
 
-			position.y = position.height * (fillAmount - 0.8f);
-
+			// Draw notification
 			GUILayout.BeginArea(position);
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
@@ -39,10 +50,12 @@ namespace UnityExtended
 			GUILayout.EndHorizontal();
 			GUILayout.EndArea();
 
+			// Wait notification
 			if (fillAmount == 1f)
 			{
 				var waitID = taskID;
 				await Task.Delay(1000);
+				// Reset
 				if (waitID == taskID)
 				{
 					fillAmount = 0f;
@@ -53,6 +66,11 @@ namespace UnityExtended
 			window.Repaint();
 		}
 
+		/// <summary>
+		/// Method to start animated notification display.
+		/// </summary>
+		/// <param name="position"><see cref="Rect"/> position</param>
+		/// <param name="content"><see cref="GUIContent"/> displayed in notification</param>
 		public void Show(Rect position, GUIContent content)
 		{
 			this.position = position;

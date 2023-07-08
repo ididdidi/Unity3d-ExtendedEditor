@@ -6,7 +6,7 @@ namespace UnityExtended
     /// <summary>
     /// Class that complements the capabilities of the editor GUI
     /// </summary>
-    public static partial class ExtendedEditorGUI
+    public partial class ExtendedEditor
     {
         /// <summary>
         /// Displays an array of objects as fields in the inspector
