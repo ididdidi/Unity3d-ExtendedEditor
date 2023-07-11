@@ -51,6 +51,7 @@ namespace UnityExtended
 
         #region Properties
         public bool IsChanged { get; set; }
+        public string SearchKeyword => searchTree.keyword;
         private SearchTreeGroupEntry ActiveParent
         {
             get
