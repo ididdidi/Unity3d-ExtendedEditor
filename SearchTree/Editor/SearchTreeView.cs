@@ -259,13 +259,16 @@ namespace UnityExtended
                         Styles.rightArrow.Draw(arrowRect, false, false, false, false);
                     }
                 }
-                if (Event.current.type == EventType.MouseDown && entryRect.Contains(Event.current.mousePosition))
+                if (Event.current.type == EventType.MouseDown)
                 {
-                    Event.current.Use();
-                    parent.SelectedIndex = i;
-                    SelectEntry(entry, true);
                     // Reset Focus
                     EditorGUI.FocusTextInControl(null);
+                    if (entryRect.Contains(Event.current.mousePosition))
+                    {
+                        Event.current.Use();
+                        parent.SelectedIndex = i;
+                        SelectEntry(entry, true);
+                    }
                 }
             }
 
