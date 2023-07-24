@@ -17,14 +17,16 @@ namespace UnityExtended
         /// </summary>
         /// <param name="content">Cotent to display an item in a list</param>
         /// <param name="level">Level in tree</param>
-        public SearchTreeGroupEntry(GUIContent content, int level = 0) : base(content, level) { }
+        /// <param name="data">User data</param>
+        public SearchTreeGroupEntry(GUIContent content, int level = 0, object data = null) : base(content, level, data) { }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="content">Cotent to display an item in a list</param>
         /// <param name="level">Level in tree</param>
-        public SearchTreeGroupEntry(string content, int level = 0) : base(new GUIContent(content), level) { }
+        /// <param name="data">User data</param>
+        public SearchTreeGroupEntry(string content, int level = 0, object data = null) : base(new GUIContent(content), level, data) { }
 
         /// <summary>
         /// Returns a subset of search tree elements
