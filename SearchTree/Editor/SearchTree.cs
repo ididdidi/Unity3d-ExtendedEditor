@@ -32,7 +32,7 @@ namespace UnityExtended
                 // The root is always the match for level 0
                 SearchTreeGroupEntry match = entries[0] as SearchTreeGroupEntry;
                 int level = 0;
-                while (true)
+                while (level < selectionStack.Count)
                 {
                     // Assign the match for the current level
                     SearchTreeGroupEntry oldSearchTreeEntry = selectionStack[level];
