@@ -18,7 +18,6 @@ namespace UnityExtended
             string[] res = System.IO.Directory.GetFiles(Application.dataPath, fileName, System.IO.SearchOption.AllDirectories);
             if (res.Length == 0)
             {
-                Debug.LogWarning($"File named {fileName} not found.");
                 return null;
             }
             string path = res[0].Replace(fileName, "").Replace("\\", "/");
@@ -37,7 +36,6 @@ namespace UnityExtended
             if (string.IsNullOrEmpty(GetDirectory($"{className}.cs")))
             {
                 System.IO.File.WriteAllText($"{path}{className}.cs", comment + code);
-                Debug.Log($"{className} was created at the {path}");
             }
         }
     }
