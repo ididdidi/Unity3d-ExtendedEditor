@@ -22,7 +22,6 @@ namespace UnityExtended
         #region Fields
         // Constants
         private const int headerHeight = 30;
-        private readonly Color background = new Color(0.22f, 0.22f, 0.22f);
 
         // Member variables
         private SearchTree searchTree;
@@ -88,7 +87,6 @@ namespace UnityExtended
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
         public void OnGUI(Rect position)
         {
-            EditorGUI.DrawRect(position, background);
             GUI.Label(position, GUIContent.none, Styles.border);
             if (IsChanged) {
                 searchTree = provider.GetSearchTree();
