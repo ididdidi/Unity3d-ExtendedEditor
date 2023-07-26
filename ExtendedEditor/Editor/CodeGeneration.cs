@@ -31,9 +31,9 @@ namespace UnityExtended
         /// <param name="path">Directory path</param>
         /// <param name="code">Code</param>
         /// <param name="comment">Comment</param>
-        public static void CreateClass(string className, string path, string code, string comment = "// Class generated automatically")
+        public static void CreateClass(string className, string path, string code, string comment = "// Class generated automatically", bool overwrite = true)
         {
-            if (string.IsNullOrEmpty(GetDirectory($"{className}.cs")))
+            if (overwrite || string.IsNullOrEmpty(GetDirectory($"{className}.cs")))
             {
                 System.IO.File.WriteAllText($"{path}{className}.cs", comment + code);
             }
