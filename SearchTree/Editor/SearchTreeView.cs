@@ -25,6 +25,7 @@ namespace UnityExtended
 
         // Member variables
         private SearchTree searchTree;
+        private SearchTreeEntry current;
 
         private EditorWindow window;
         private ISearchTreeProvider provider;
@@ -232,13 +233,25 @@ namespace UnityExtended
                     }
                 }
 
+                if (Event.current.type == EventType.MouseDown)
+                {
+                    // Reset Focus
+                    EditorGUI.FocusTextInControl(null);
+                    if (entryRect.Contains(Event.current.mousePosition))
+                    {
+                        Event.current.Use();
+                        parent.SelectedIndex = i;
+                        SelectEntry(entry, true);
+                    }
+                }
+
                 bool selected = false;
                 // Handle selected item
                 if (i == parent.SelectedIndex)
                 {
                     selected = true;
                     selectedRect = entryRect;
-                    provider.OnFocusEntry(entry);
+                    FocusEntry(entry);
                 }
 
                 // Draw SearchTreeEntry
@@ -255,17 +268,6 @@ namespace UnityExtended
                             Styles.rightArrow.fixedWidth,
                             Styles.rightArrow.fixedHeight);
                         Styles.rightArrow.Draw(arrowRect, false, false, false, false);
-                    }
-                }
-                if (Event.current.type == EventType.MouseDown)
-                {
-                    // Reset Focus
-                    EditorGUI.FocusTextInControl(null);
-                    if (entryRect.Contains(Event.current.mousePosition))
-                    {
-                        Event.current.Use();
-                        parent.SelectedIndex = i;
-                        SelectEntry(entry, true);
                     }
                 }
             }
@@ -289,6 +291,15 @@ namespace UnityExtended
                     parent.ScrollPosition.y = selectedRect.y;
                     window.Repaint();
                 }
+            }
+        }
+
+        private void FocusEntry(SearchTreeEntry entry)
+        {
+            if(!isAnimating && current != entry)
+            {
+                current = entry;
+                provider.OnFocusEntry(current);
             }
         }
 
