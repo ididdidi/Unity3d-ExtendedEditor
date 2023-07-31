@@ -25,8 +25,6 @@ namespace UnityExtended
 
         // Member variables
         private SearchTree searchTree;
-        private SearchTreeEntry current;
-
         private EditorWindow window;
         private ISearchTreeProvider provider;
         private bool grabFocus;
@@ -52,6 +50,7 @@ namespace UnityExtended
         #region Properties
         public bool IsChanged { get; set; }
         public string SearchKeyword => searchTree.keyword;
+        public SearchTreeEntry CurrentEntry { get; private set; }
         private SearchTreeGroupEntry ActiveParent
         {
             get
@@ -296,10 +295,10 @@ namespace UnityExtended
 
         private void FocusEntry(SearchTreeEntry entry)
         {
-            if(!isAnimating && current != entry)
+            if(!isAnimating && CurrentEntry != entry)
             {
-                current = entry;
-                provider.OnFocusEntry(current);
+                CurrentEntry = entry;
+                provider.OnFocusEntry(CurrentEntry);
             }
         }
 
