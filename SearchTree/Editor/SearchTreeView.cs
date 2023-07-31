@@ -130,6 +130,8 @@ namespace UnityExtended
             ListGUI(position, searchTree.ActiveTree, currentAnimation, searchTree.GetReturnGroupEntry(0), searchTree.GetReturnGroupEntry(-1));
             if (currentAnimation < 1) { ListGUI(position, searchTree.ActiveTree, currentAnimation + 1, searchTree.GetReturnGroupEntry(-1), searchTree.GetReturnGroupEntry(-2)); }
 
+            FocusEntry(ActiveSearchEntry);
+
             // Animate
             if (isAnimating && Event.current.type == EventType.Repaint)
             {
@@ -250,7 +252,6 @@ namespace UnityExtended
                 {
                     selected = true;
                     selectedRect = entryRect;
-                    FocusEntry(entry);
                 }
 
                 // Draw SearchTreeEntry
