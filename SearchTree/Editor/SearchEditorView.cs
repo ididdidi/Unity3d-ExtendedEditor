@@ -8,7 +8,7 @@ namespace UnityExtended
         void Repaint();
     }
 
-    public class SearchEditorView
+    public class SearchEditorView : IEditorView
     {
         // Styles
         static class Styles
@@ -81,18 +81,17 @@ namespace UnityExtended
         }
         private bool isAnimating { get => currentAnimation != targetAnimation; }
         private bool isOnFocus { get => GUIUtility.keyboardControl == controlId || GUIUtility.keyboardControl == 0; }
+        public float HeightInGUI =>
+            ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty).Length * (EditorGUIUtility.singleLineHeight + 2) + 50;
+        public System.Action<Rect> OptionButton { get; set; }
         #endregion
 
         /// <summary>
         /// Method to display search field and tree.
         /// </summary>
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
-        public void OnGUI()
+        public void OnGUI(Rect position)
         {
-            var count = ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty).Length;
-            var position = GUILayoutUtility.GetRect(EditorGUIUtility.currentViewWidth, count * (EditorGUIUtility.singleLineHeight + 2) + 50);
-            position.width = EditorGUIUtility.currentViewWidth;
-
             if (IsChanged)
             {
                 searchTree = provider.GetSearchTree();
@@ -131,6 +130,11 @@ namespace UnityExtended
             }
 
             if (grabFocus) { grabFocus = false; EditorGUI.FocusTextInControl("SearchField"); }
+
+            if (OptionButton != null && string.IsNullOrEmpty(searchTree.keyword))
+            {
+                OptionButton.Invoke(new Rect(position.width - 18, 8, 20, 20));
+            }
         
             // Show lists
             ListGUI(position, searchTree.ActiveTree, currentAnimation, searchTree.GetReturnGroupEntry(0), searchTree.GetReturnGroupEntry(-1));
