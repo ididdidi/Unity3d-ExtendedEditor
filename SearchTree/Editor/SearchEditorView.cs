@@ -82,7 +82,7 @@ namespace UnityExtended
         private bool isAnimating { get => currentAnimation != targetAnimation; }
         private bool isOnFocus { get => GUIUtility.keyboardControl == controlId || GUIUtility.keyboardControl == 0; }
         public float HeightInGUI =>
-            ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty).Length * (EditorGUIUtility.singleLineHeight + 2) + 50;
+            ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty).Length * (EditorGUIUtility.singleLineHeight + 2) + 56;
         public System.Action<Rect> OptionButton { get; set; }
         #endregion
 
@@ -173,17 +173,17 @@ namespace UnityExtended
             animationValue = Mathf.Floor(animationValue) + Mathf.SmoothStep(0, 1, Mathf.Repeat(animationValue, 1));
 
             // Calculate rect for animated area
-            Rect animRect = new Rect (position);
+            Rect animRect = position;
             animRect.x = position.width * (1 - animationValue) + 1;
             animRect.y = headerHeight;
             animRect.height -= headerHeight;
             animRect.width -= 2;
 
+            // Start of animated area (the part that moves left and right)
+            GUILayout.BeginArea(animRect);
+
             // Header
-            Rect headerRect = new Rect(animRect);
-            headerRect.height = 25;
-            animRect.y += headerRect.height;
-            animRect.height -= headerRect.height;
+            Rect headerRect = GUILayoutUtility.GetRect(10, 25);
             string name = parent.Name;
             GUI.Label(headerRect, name, Styles.header);
 
@@ -205,7 +205,8 @@ namespace UnityExtended
                 }
             }
 
-            ListGUI(animRect, tree, parent);
+            ListGUI(tree, parent);
+            GUILayout.EndArea();
         }
 
         /// <summary>
@@ -214,7 +215,7 @@ namespace UnityExtended
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
         /// <param name="tree">Search tree</param>
         /// <param name="parent">The parent entry of the search tree</param>
-        private void ListGUI(Rect position, SearchTreeEntry[] tree, SearchTreeGroupEntry parent)
+        private void ListGUI(SearchTreeEntry[] tree, SearchTreeGroupEntry parent)
         {
             var height = EditorGUIUtility.singleLineHeight;
 
@@ -228,10 +229,8 @@ namespace UnityExtended
             for (int i = 0; i < children.Length; i++)
             {
                 SearchTreeEntry entry = children[i];
-                Rect entryRect = new Rect(position); // GUILayoutUtility.GetRect(height, height + 2, GUILayout.ExpandWidth(true));
-                entryRect.height = height + 2;
-                position.y += entryRect.height;
-                position.height -= entryRect.height;
+                Rect entryRect = GUILayoutUtility.GetRect(height, height + 2, GUILayout.ExpandWidth(true));
+
                 // Select the SearchTreeEntry the mouse cursor is over.
                 // Only do it on mouse move - keyboard controls are allowed to overwrite this until the next time the mouse moves.
                 if (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDown)
