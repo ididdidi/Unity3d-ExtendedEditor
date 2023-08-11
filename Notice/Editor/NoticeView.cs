@@ -9,7 +9,7 @@ namespace UnityExtended
 	/// </summary>
 	public class NoticeView
     {
-        private EditorWindow window;
+        private IDisplay display;
         private GUIContent noticeContent;
 		private Rect position;
         private long lastTime;
@@ -21,7 +21,7 @@ namespace UnityExtended
 		/// Constructor.
 		/// </summary>
 		/// <param name="window"><see cref="EditorWindow"/></param>
-		public NoticeView(EditorWindow window) => this.window = window ?? throw new System.ArgumentNullException(nameof(window));
+		public NoticeView(IDisplay display) => this.display = display ?? throw new System.ArgumentNullException(nameof(display));
 
 		/// <summary>
 		/// Method for rendering an animated notification. It is necessary to call the window method of the same name.
@@ -63,7 +63,7 @@ namespace UnityExtended
 				}
 			}
 
-			window.Repaint();
+			display.Repaint();
 		}
 
 		/// <summary>
