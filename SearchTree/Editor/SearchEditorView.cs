@@ -218,8 +218,10 @@ namespace UnityExtended
         private void ListGUI(SearchTreeEntry[] tree, SearchTreeGroupEntry parent)
         {
             var height = EditorGUIUtility.singleLineHeight;
-
             EditorGUIUtility.SetIconSize(new Vector2(height, height));
+
+            // Start of scroll view list
+            parent.ScrollPosition = GUILayout.BeginScrollView(parent.ScrollPosition);
 
             SearchTreeEntry[] children = parent.GetChildren(tree, searchTree.SearchKeyIsEmpty);
 
@@ -281,6 +283,7 @@ namespace UnityExtended
             }
 
             EditorGUIUtility.SetIconSize(Vector2.zero);
+            GUILayout.EndScrollView();
 
             // Scroll to show selected
             if (scrollToSelected && Event.current.type == EventType.Repaint)
