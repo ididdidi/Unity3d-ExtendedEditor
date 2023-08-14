@@ -22,6 +22,18 @@ namespace UnityExtended
             return new Rect(new Vector2(rect.x + dX + padding.x, rect.y + dY + padding.y), new Vector2(size.x - padding.x * 2f, size.y - padding.y * 2f));
         }
 
+        private static bool isGUIChanged;
+        public static void BeginIgnoreChanges()
+        {
+            isGUIChanged = GUI.changed;
+            GUI.changed = false;
+        }
+
+        public static void EndIgnoreChanges()
+        {
+            GUI.changed = isGUIChanged;
+        }
+
         /// <summary>
         /// Draws a line of the given color and thickness in the inspector.
         /// </summary>

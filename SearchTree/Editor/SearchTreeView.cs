@@ -63,6 +63,7 @@ namespace UnityExtended
                 return searchTree.selectionStack[index];
             }
         }
+        private SearchTreeEntry[] ActiveChildren => ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty);
         private SearchTreeEntry ActiveSearchEntry
         {
             get
@@ -70,7 +71,7 @@ namespace UnityExtended
                 if (searchTree.ActiveTree == null)
                     return null;
 
-                SearchTreeEntry[] children = ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty);
+                SearchTreeEntry[] children = ActiveChildren;
                 if (ActiveParent == null || ActiveParent.SelectedIndex < 0 || ActiveParent.SelectedIndex >= children.Length)
                     return null;
 
@@ -80,6 +81,18 @@ namespace UnityExtended
         private bool isAnimating { get => currentAnimation != targetAnimation; }
         private bool isOnFocus { get => GUIUtility.keyboardControl == controlId || GUIUtility.keyboardControl == 0; }
         #endregion
+
+        /// <summary>
+        /// Method for go to previous level
+        /// </summary>
+        public void GoToParent()
+        {
+            if (searchTree.selectionStack.Count > 1)
+            {
+                targetAnimation = 0;
+                lastTime = System.DateTime.Now.Ticks;
+            }
+        }
 
         /// <summary>
         /// Method to display search field and tree.
@@ -96,6 +109,17 @@ namespace UnityExtended
                     lastTime = System.DateTime.Now.Ticks;
                 }
                 IsChanged = false;
+            }
+
+            // Check SelectedIndex
+            var countActiveChildren = ActiveChildren.Length;
+            if (ActiveParent.SelectedIndex >= countActiveChildren)
+            {
+                ActiveParent.SelectedIndex = countActiveChildren - 1;
+            }
+            else if(ActiveParent.SelectedIndex < 0 && countActiveChildren > 0)
+            {
+                ActiveParent.SelectedIndex = 0;
             }
 
             // Keyboard
@@ -115,7 +139,7 @@ namespace UnityExtended
                     searchTree.Update();
                     // Always select the first search result when search is changed (e.g. a character was typed in or deleted),
                     // because it's usually the best match.
-                    if (ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty).Length >= 1)
+                    if (ActiveChildren.Length >= 1)
                         ActiveParent.SelectedIndex = 0;
                     else
                         ActiveParent.SelectedIndex = -1;
@@ -306,7 +330,6 @@ namespace UnityExtended
         /// <summary>
         /// Action associated with the selected item.
         /// </summary>
-        /// <param name="context">Object for interacting with an object in which data is displayed</param>
         /// <param name="entry">Selected search tree entry</param>
         /// <param name="hasCallback">Should invoke callback</param>
         private void SelectEntry(SearchTreeEntry entry, bool hasCallback)
@@ -328,21 +351,8 @@ namespace UnityExtended
         }
 
         /// <summary>
-        /// Method for go to previous level
-        /// </summary>
-        private void GoToParent()
-        {
-            if (searchTree.selectionStack.Count > 1)
-            {
-                targetAnimation = 0;
-                lastTime = System.DateTime.Now.Ticks;
-            }
-        }
-
-        /// <summary>
         /// Handles keystrokes
         /// </summary>
-        /// <param name="context">Object for interacting with an object in which data is displayed</param>
         private void HandleKeyboard(Event curentEvent)
         {
             if (curentEvent.type == EventType.KeyDown && isOnFocus)
@@ -359,7 +369,7 @@ namespace UnityExtended
                         return;
                     case KeyCode.PageDown:
                         {
-                            ActiveParent.SelectedIndex = ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty).Length - 1;
+                            ActiveParent.SelectedIndex = ActiveChildren.Length - 1;
                             scrollToSelected = true;
                             curentEvent.Use();
                         }
@@ -375,7 +385,7 @@ namespace UnityExtended
                     case KeyCode.DownArrow:
                         {
                             ActiveParent.SelectedIndex++;
-                            ActiveParent.SelectedIndex = Mathf.Min(ActiveParent.SelectedIndex, ActiveParent.GetChildren(searchTree.ActiveTree, searchTree.SearchKeyIsEmpty).Length - 1);
+                            ActiveParent.SelectedIndex = Mathf.Min(ActiveParent.SelectedIndex, ActiveChildren.Length - 1);
                             scrollToSelected = true;
                             curentEvent.Use();
                         }
