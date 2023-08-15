@@ -3,10 +3,7 @@ using UnityEngine;
 
 namespace UnityExtended
 {
-    /// <summary>
-    /// Class for displaying search in the Unity3d editor.
-    /// </summary>
-    public class SearchTreeView
+    public class SearchTreeView : IEditorView
     {
         // Styles
         static class Styles
@@ -25,7 +22,7 @@ namespace UnityExtended
 
         // Member variables
         private SearchTree searchTree;
-        private EditorWindow window;
+        private IDisplay display;
         private ISearchTreeProvider provider;
         private bool grabFocus;
         private int controlId;
@@ -39,9 +36,9 @@ namespace UnityExtended
         #endregion
 
         // Constructor
-        public SearchTreeView(EditorWindow window, ISearchTreeProvider provider, bool grabFocus = true)
+        public SearchTreeView(IDisplay display, ISearchTreeProvider provider, bool grabFocus = true)
         {
-            this.window = window;
+            this.display = display;
             this.provider = provider;
             this.grabFocus = grabFocus;
             searchTree = provider.GetSearchTree();
@@ -80,6 +77,7 @@ namespace UnityExtended
         }
         private bool isAnimating { get => currentAnimation != targetAnimation; }
         private bool isOnFocus { get => GUIUtility.keyboardControl == controlId || GUIUtility.keyboardControl == 0; }
+        public System.Action<Rect> OptionButton { get; set; }
         #endregion
 
         /// <summary>
@@ -100,26 +98,27 @@ namespace UnityExtended
         /// <param name="context">Object for interacting with an object in which data is displayed</param>
         public void OnGUI(Rect position)
         {
-            GUI.Label(position, GUIContent.none, Styles.border);
-            if (IsChanged) {
+            if (IsChanged)
+            {
                 searchTree = provider.GetSearchTree();
                 if (searchTree.SearchKeyIsEmpty)
                 {
                     targetAnimation = 1;
                     lastTime = System.DateTime.Now.Ticks;
                 }
-                IsChanged = false;
-            }
 
-            // Check SelectedIndex
-            var countActiveChildren = ActiveChildren.Length;
-            if (ActiveParent.SelectedIndex >= countActiveChildren)
-            {
-                ActiveParent.SelectedIndex = countActiveChildren - 1;
-            }
-            else if(ActiveParent.SelectedIndex < 0 && countActiveChildren > 0)
-            {
-                ActiveParent.SelectedIndex = 0;
+                // Check SelectedIndex
+                var countActiveChildren = ActiveChildren.Length;
+                if (ActiveParent.SelectedIndex >= countActiveChildren)
+                {
+                    ActiveParent.SelectedIndex = countActiveChildren - 1;
+                }
+                else if (ActiveParent.SelectedIndex < 0 && countActiveChildren > 0)
+                {
+                    ActiveParent.SelectedIndex = 0;
+                }
+
+                IsChanged = false;
             }
 
             // Keyboard
@@ -139,23 +138,26 @@ namespace UnityExtended
                     searchTree.Update();
                     // Always select the first search result when search is changed (e.g. a character was typed in or deleted),
                     // because it's usually the best match.
-                    if (ActiveChildren.Length >= 1)
-                        ActiveParent.SelectedIndex = 0;
-                    else
-                        ActiveParent.SelectedIndex = -1;
+                    if (ActiveChildren.Length >= 1) { ActiveParent.SelectedIndex = 0; }
+                    else { ActiveParent.SelectedIndex = -1; }
                     delayedSearch = null;
                 }
-                else {  delayedSearch = newSearch; }
+                else { delayedSearch = newSearch; }
             }
 
             if (grabFocus) { grabFocus = false; EditorGUI.FocusTextInControl("SearchField"); }
 
+            if (OptionButton != null && string.IsNullOrEmpty(searchTree.keyword))
+            {
+                OptionButton.Invoke(new Rect(position.width - 18, 8, 20, 20));
+            }
+        
             // Show lists
             ListGUI(position, searchTree.ActiveTree, currentAnimation, searchTree.GetReturnGroupEntry(0), searchTree.GetReturnGroupEntry(-1));
             if (currentAnimation < 1) { ListGUI(position, searchTree.ActiveTree, currentAnimation + 1, searchTree.GetReturnGroupEntry(-1), searchTree.GetReturnGroupEntry(-2)); }
-
+        
             FocusEntry(ActiveSearchEntry);
-
+        
             // Animate
             if (isAnimating && Event.current.type == EventType.Repaint)
             {
@@ -169,7 +171,7 @@ namespace UnityExtended
                     targetAnimation = 1;
                     searchTree.selectionStack.RemoveAt(searchTree.selectionStack.Count - 1);
                 }
-                window.Repaint();
+                display.Repaint();
             }
         }
 
@@ -211,7 +213,7 @@ namespace UnityExtended
                     Styles.leftArrow.fixedWidth,
                     Styles.leftArrow.fixedHeight);
                 if (Event.current.type == EventType.Repaint) { Styles.leftArrow.Draw(arrowRect, false, false, false, false); }
-                    
+
                 if (Event.current.type == EventType.MouseDown && headerRect.Contains(Event.current.mousePosition))
                 {
                     GoToParent();
@@ -232,10 +234,10 @@ namespace UnityExtended
         private void ListGUI(SearchTreeEntry[] tree, SearchTreeGroupEntry parent)
         {
             var height = EditorGUIUtility.singleLineHeight;
+            EditorGUIUtility.SetIconSize(new Vector2(height, height));
+
             // Start of scroll view list
             parent.ScrollPosition = GUILayout.BeginScrollView(parent.ScrollPosition);
-
-            EditorGUIUtility.SetIconSize(new Vector2(height, height));
 
             SearchTreeEntry[] children = parent.GetChildren(tree, searchTree.SearchKeyIsEmpty);
 
@@ -254,7 +256,7 @@ namespace UnityExtended
                     if (parent.SelectedIndex != i && entryRect.Contains(Event.current.mousePosition))
                     {
                         parent.SelectedIndex = i;
-                        window.Repaint();
+                        display.Repaint();
                     }
                 }
 
@@ -266,7 +268,7 @@ namespace UnityExtended
                     {
                         Event.current.Use();
                         parent.SelectedIndex = i;
-                        SelectEntry(entry, true);
+                        SelectEntry(entry);
                     }
                 }
 
@@ -297,7 +299,6 @@ namespace UnityExtended
             }
 
             EditorGUIUtility.SetIconSize(Vector2.zero);
-
             GUILayout.EndScrollView();
 
             // Scroll to show selected
@@ -308,19 +309,19 @@ namespace UnityExtended
                 if (selectedRect.yMax - scrollRect.height > parent.ScrollPosition.y)
                 {
                     parent.ScrollPosition.y = selectedRect.yMax - scrollRect.height;
-                    window.Repaint();
+                    display.Repaint();
                 }
                 if (selectedRect.y < parent.ScrollPosition.y)
                 {
                     parent.ScrollPosition.y = selectedRect.y;
-                    window.Repaint();
+                    display.Repaint();
                 }
             }
         }
 
         private void FocusEntry(SearchTreeEntry entry)
         {
-            if(!isAnimating && CurrentEntry != entry)
+            if (!isAnimating && CurrentEntry != entry)
             {
                 CurrentEntry = entry;
                 provider.OnFocusEntry(CurrentEntry);
@@ -331,8 +332,7 @@ namespace UnityExtended
         /// Action associated with the selected item.
         /// </summary>
         /// <param name="entry">Selected search tree entry</param>
-        /// <param name="hasCallback">Should invoke callback</param>
-        private void SelectEntry(SearchTreeEntry entry, bool hasCallback)
+        private void SelectEntry(SearchTreeEntry entry)
         {
             if (entry is SearchTreeGroupEntry group)
             {
@@ -347,12 +347,13 @@ namespace UnityExtended
                     }
                 }
             }
-            else if (hasCallback && provider.OnSelectEntry(entry)) { window.Close(); }
+            else { provider.OnSelectEntry(entry); }
         }
 
         /// <summary>
         /// Handles keystrokes
         /// </summary>
+        /// <param name="curentEvent"></param>
         private void HandleKeyboard(Event curentEvent)
         {
             if (curentEvent.type == EventType.KeyDown && isOnFocus)
@@ -393,7 +394,7 @@ namespace UnityExtended
                     case KeyCode.RightArrow:
                         if (searchTree.SearchKeyIsEmpty && ActiveSearchEntry != null)
                         {
-                            SelectEntry(ActiveSearchEntry, false);
+                            SelectEntry(ActiveSearchEntry);
                             curentEvent.Use();
                         }
                         return;
@@ -407,14 +408,14 @@ namespace UnityExtended
                     case KeyCode.KeypadEnter:
                         if (ActiveSearchEntry != null)
                         {
-                            SelectEntry(ActiveSearchEntry, true);
+                            SelectEntry(ActiveSearchEntry);
                             curentEvent.Use();
                         }
                         return;
                     case KeyCode.Return:
-                        if(ActiveSearchEntry != null)
+                        if (ActiveSearchEntry != null)
                         {
-                            SelectEntry(ActiveSearchEntry, true);
+                            SelectEntry(ActiveSearchEntry);
                             curentEvent.Use();
                         }
                         return;

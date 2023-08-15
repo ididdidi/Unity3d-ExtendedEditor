@@ -6,7 +6,7 @@ namespace UnityExtended
     /// <summary>
     /// Class for creating and displaying a drop-down editor window.
     /// </summary>
-    public class SearchDropDownWindow : EditorWindow
+    public class SearchDropDownWindow : EditorWindow, IDisplay
     {
         // Defaul size
         private const float defaultWidth = 240f;
