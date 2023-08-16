@@ -41,13 +41,16 @@ namespace UnityExtended
             this.display = display;
             this.provider = provider;
             this.grabFocus = grabFocus;
-            searchTree = provider.GetSearchTree();
+            IsChanged = true;
         }
 
         #region Properties
         public bool IsChanged { get; set; }
         public string SearchKeyword => searchTree.keyword;
         public SearchTreeEntry CurrentEntry { get; private set; }
+        public System.Action<object> OnFocusEntry { get; set; }
+        public System.Action<object> OnSelectEntry { get; set; }
+        public System.Action<Rect> OptionButton { get; set; }
         private SearchTreeGroupEntry ActiveParent
         {
             get
@@ -77,7 +80,6 @@ namespace UnityExtended
         }
         private bool isAnimating { get => currentAnimation != targetAnimation; }
         private bool isOnFocus { get => GUIUtility.keyboardControl == controlId || GUIUtility.keyboardControl == 0; }
-        public System.Action<Rect> OptionButton { get; set; }
         #endregion
 
         /// <summary>
@@ -324,7 +326,7 @@ namespace UnityExtended
             if (!isAnimating && CurrentEntry != entry)
             {
                 CurrentEntry = entry;
-                provider.OnFocusEntry(CurrentEntry);
+                OnFocusEntry?.Invoke(CurrentEntry?.Data ?? new GUIContent("Not found...", EditorGUIUtility.IconContent("Search Icon").image));
             }
         }
 
@@ -347,7 +349,7 @@ namespace UnityExtended
                     }
                 }
             }
-            else { provider.OnSelectEntry(entry); }
+            else { OnSelectEntry?.Invoke(entry.Data); }
         }
 
         /// <summary>

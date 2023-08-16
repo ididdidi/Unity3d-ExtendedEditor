@@ -7,7 +7,5 @@
     public interface ISearchTreeProvider
     {
         SearchTree GetSearchTree();
-        void OnFocusEntry(SearchTreeEntry entry);
-        bool OnSelectEntry(SearchTreeEntry entry);
     }
 }

@@ -20,7 +20,7 @@ namespace UnityExtended
         /// </summary>
         /// <param name="provider">SearchTree data provider</param>
         /// <param name="size">Size window</param>
-        public static SearchDropDownWindow Show(ISearchTreeProvider provider, Vector2 size = default)
+        public static SearchDropDownWindow Show(ISearchTreeProvider provider, System.Action<object> OnSelectEntry, Vector2 size = default)
         {
             float width = System.Math.Max(size.x, defaultWidth);
             float height = System.Math.Max(size.y, defaultHeight);
@@ -30,6 +30,7 @@ namespace UnityExtended
 
             var instance = (SearchDropDownWindow)CreateInstance(typeof(SearchDropDownWindow));
             instance.searchView = new SearchTreeView(instance, provider);
+            instance.searchView.OnSelectEntry = OnSelectEntry;
             instance.hideFlags = HideFlags.HideAndDontSave;
             instance.ShowAsDropDown(buttonRect, new Vector2(buttonRect.width, height));
             instance.Focus();
@@ -44,6 +45,7 @@ namespace UnityExtended
         internal void OnGUI()
         {
             searchView?.OnGUI(position);
+
             var curentEvent = Event.current;
             if (curentEvent.type == EventType.KeyDown && curentEvent.keyCode == KeyCode.Escape)
             {
