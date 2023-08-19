@@ -22,16 +22,29 @@ namespace UnityExtended
             return new Rect(new Vector2(rect.x + dX + padding.x, rect.y + dY + padding.y), new Vector2(size.x - padding.x * 2f, size.y - padding.y * 2f));
         }
 
-        private static bool isGUIChanged;
+        /// <summary>
+        /// Field to store GUI.changed parameter
+        /// </summary>
+        //private static bool isGUIChanged;
+        private static System.Collections.Generic.Stack<bool> isGUIChanged = new System.Collections.Generic.Stack<bool>();
+
+        /// <summary>
+        /// Method for which allows GUI changes to be ignored.
+        /// </summary>
         public static void BeginIgnoreChanges()
         {
-            isGUIChanged = GUI.changed;
+            if (isGUIChanged.Count > 10) { throw new System.Exception("Too many nested BeginIgnoreChanges() calls"); }
+            isGUIChanged.Push(GUI.changed);
             GUI.changed = false;
         }
 
+        /// <summary>
+        /// The method returns before the GUI changes are triggered.
+        /// </summary>
         public static void EndIgnoreChanges()
         {
-            GUI.changed = isGUIChanged;
+            if (isGUIChanged.Count > 0) {  GUI.changed = isGUIChanged.Pop(); }
+            else { throw new System.Exception("EndIgnoreChanges() was caused more often than BeginIgnoreChanges()"); }
         }
 
         /// <summary>
@@ -165,5 +178,13 @@ namespace UnityExtended
             // Display message
             EditorGUILayout.LabelField(label, style);
         }
+
+        /// <summary>
+        /// Simple deletion confirmation dialog.
+        /// </summary>
+        /// <param name="name">Name of the object to be deleted</param>
+        /// <returns>Yes or No as bool value</returns>
+        public static bool DeleteConfirmation(string name) 
+            => EditorUtility.DisplayDialog($"Delete {name}", $"Are you sure want to delete {name}?", "Yes", "No");
     }
 }
